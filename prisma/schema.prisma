@@ -1,0 +1,54 @@
+﻿generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model SiteConfig {
+  id          String   @id @default(cuid())
+  heroTitle   String   @default("极致性能 驱动工业未来")
+  heroSub     String   @default("质量不妥协，性能即信仰。")
+  contactMail String   @default("info@suci.com")
+  contactPhone String  @default("+86 400-888-9999")
+  whatsappNumber String @default("+86 138-0000-0000")
+  wechatQrUrl    String?
+  updatedAt   DateTime @updatedAt
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  model       String
+  category    String
+  primaryCategory String?
+  secondaryCategory String?
+  tertiaryCategory String?
+  description String   @db.Text
+  specs       String
+  imageUrl    String?
+  catalogUrl  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Inquiry {
+  id          String   @id @default(cuid())
+  clientName  String
+  clientEmail String
+  phone       String?
+  companyName String?
+  productType String
+  message     String   @db.Text
+  status      String   @default("PENDING")
+  createdAt   DateTime @default(now())
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  role      String   @default("ADMIN")
+  createdAt DateTime @default(now())
+}

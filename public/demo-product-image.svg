@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900" role="img" aria-labelledby="title desc">
+  <title id="title">Demo Product Image</title>
+  <desc id="desc">Illustrative placeholder image for a power equipment product.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#111111"/>
+      <stop offset="100%" stop-color="#2d5bff"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="900" fill="url(#bg)"/>
+  <rect x="130" y="140" width="940" height="620" rx="40" fill="#f5f5f5" opacity="0.12"/>
+  <rect x="260" y="250" width="240" height="360" rx="28" fill="#ffffff"/>
+  <rect x="520" y="210" width="120" height="440" rx="32" fill="#d9d9d9"/>
+  <rect x="670" y="290" width="260" height="280" rx="36" fill="#ffffff"/>
+  <circle cx="800" cy="430" r="84" fill="#2d5bff"/>
+  <rect x="160" y="90" width="300" height="18" rx="9" fill="#ffffff" opacity="0.28"/>
+  <text x="160" y="835" font-family="Arial, sans-serif" font-size="52" font-weight="700" fill="#ffffff">SUCI Demo Product</text>
+  <text x="160" y="880" font-family="Arial, sans-serif" font-size="26" fill="#d8ddff">Composite power equipment for preview and PDF testing</text>
+</svg>

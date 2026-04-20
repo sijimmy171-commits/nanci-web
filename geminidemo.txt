@@ -1,0 +1,930 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence, useInView } from 'framer-motion';
+import { 
+  Menu, X, Search, Globe, Phone, ChevronRight, ChevronLeft, 
+  Calendar, Users, Building, Trophy, MapPin, Factory, Quote,
+  ArrowRight, Download, Mail, Printer, CheckCircle, ArrowUp,
+  Plus, Minus, Eye, MessageCircle
+} from 'lucide-react';
+
+// ==========================================
+// 修复 Tailwind 未定义的引用错误
+// ==========================================
+if (typeof window !== 'undefined' && typeof window.tailwind === 'undefined') {
+  window.tailwind = { config: {} };
+}
+
+// ==========================================
+// 1. 全局配置与模拟数据
+// ==========================================
+
+const NAV_LINKS = [
+  { id: 'home', label: '首页' },
+  { id: 'about', label: '关于我们', sub: ['公司简介', '发展历程', '资质荣誉', '企业文化'] },
+  { id: 'products', label: '产品中心', sub: ['绝缘子系列', '避雷器系列', '开关设备系列', '配套组件系列'] },
+  { id: 'cases', label: '工程案例' },
+  { id: 'news', label: '新闻资讯' },
+  { id: 'contact', label: '联系我们' }
+];
+
+const PRODUCTS_DATA = [
+  { id: 'p1', category: '绝缘子系列', name: '支柱复合绝缘子', model: 'FZSW-110/10', desc: '适用于高压输电线路，具有优异的耐污闪性能和极高的机械强度。', specs: ['110kV~500kV', '120kN', 'IP65'] },
+  { id: 'p2', category: '绝缘子系列', name: '空心复合绝缘子', model: 'FXBW-220/120', desc: '采用优质硅橡胶外套，专为变电站高压设备提供绝缘支撑。', specs: ['220kV', '100kN', 'IP65'] },
+  { id: 'p3', category: '绝缘子系列', name: '线路复合绝缘子', model: 'FXBW4-35/70', desc: '重量轻、防污闪能力强，适用于各种复杂气候条件下的架空线路。', specs: ['35kV', '70kN', 'IP54'] },
+  { id: 'p4', category: '避雷器系列', name: '氧化锌避雷器', model: 'Y5W-12/30', desc: '提供卓越的过电压保护，响应速度快，通流容量大。', specs: ['12kV', '大通流', '免维护'] },
+  { id: 'p5', category: '避雷器系列', name: '配电型避雷器', model: 'HY5WS-17/50', desc: '专为配电网络设计，有效防止雷电过电压对设备的损害。', specs: ['17kV', '50kA', '长寿命'] },
+  { id: 'p6', category: '开关设备系列', name: '高压隔离开关', model: 'GW4-110DW', desc: '性能稳定，操作灵活，是变电站中隔离电源的关键设备。', specs: ['110kV', '电动/手动', '防冰冻'] },
+  { id: 'p7', category: '开关设备系列', name: '环保型环网柜', model: 'HXGN-12', desc: '采用环保气体绝缘，体积小巧，适用于城市配电网络。', specs: ['12kV', 'SF6 Free', '智能化'] },
+  { id: 'p8', category: '配套组件系列', name: '防雷金具', model: 'FL-01', desc: '高强度合金制造，配合绝缘子和避雷器使用，保障线路安全。', specs: ['高强度', '防腐蚀', '易安装'] },
+];
+
+const CASES_DATA = [
+  { id: 'c1', title: '国家电网某省特高压工程', location: '河南', category: '电网工程', product: '绝缘子', desc: '为该特高压直流输电工程提供全套支柱复合绝缘子，保障跨区电力外送。' },
+  { id: 'c2', title: '南方电网配电网升级项目', location: '广东', category: '配电工程', product: '配电设备', desc: '参与粤港澳大湾区智能电网建设，提供高可靠性环保型环网柜。' },
+  { id: 'c3', title: '中东某国输电线路工程', location: '沙特阿拉伯', category: '海外项目', product: '避雷器', desc: '克服极端高温和沙漠环境，定制防风沙型高压避雷器。' },
+  { id: 'c4', title: '东南亚城市轨道交通项目', location: '泰国', category: '轨道交通', product: '开关设备', desc: '为曼谷城市轨道交通提供稳定可靠的牵引供电开关设备。' },
+  { id: 'c5', title: '非洲某国电力基础设施', location: '肯尼亚', category: '海外项目', product: '绝缘子', desc: '助力"一带一路"建设，提供高性价比的线路复合绝缘子。' },
+  { id: 'c6', title: '欧洲风电场配套工程', location: '德国', category: '新能源', product: '配套组件', desc: '为海上风电场提供防腐蚀定制金具及绝缘配套产品。' }
+];
+
+const NEWS_DATA = [
+  { id: 'n1', title: '公司荣获2025年度国家科技进步奖', date: '2025-12-15', category: '公司动态', desc: '凭借在特高压绝缘材料领域的重大技术突破，我司主导的研发项目荣获国家科技进步二等奖。', tags: ['获奖', '研发'] },
+  { id: 'n2', title: '新一代复合绝缘子产品通过国际认证', date: '2025-11-28', category: '行业新闻', desc: '我司最新研发的耐高寒复合绝缘子顺利通过KEMA国际权威测试认证，标志着技术水平达到国际领先。', tags: ['认证', '国际化'] },
+  { id: 'n3', title: '公司参展第25届国际电力设备展览会', date: '2025-11-10', category: '公司动态', desc: '携全系列智能电力配套产品亮相EP China 2025，吸引了众多国内外客户的关注与洽谈。', tags: ['展会', '市场'] },
+  { id: 'n4', title: '与某央企签署战略合作框架协议', date: '2025-10-22', category: '媒体报道', desc: '双方将在新能源输配电设备研发、重点工程建设等领域展开全面深度合作，共谋发展。', tags: ['合作', '签约'] }
+];
+
+const PARTNERS = [
+  '国家电网', '南方电网', '中国能建', '中国电建', 'GE', 'Siemens', 
+  'ABB', 'Hitachi', '施耐德', '许继电气', '特变电工', '正泰电器'
+];
+
+const LANGUAGES = [
+  { code: 'en', label: 'English' },
+  { code: 'zh', label: '中文' },
+  { code: 'es', label: 'Español' },
+  { code: 'fr', label: 'Français' },
+  { code: 'de', label: 'Deutsch' },
+  { code: 'ru', label: 'Русский' },
+  { code: 'ar', label: 'العربية' },
+  { code: 'ja', label: '日本語' }
+];
+
+// ==========================================
+// 2. 核心 UI 组件
+// ==========================================
+
+const Button = ({ children, variant = 'primary', className = '', onClick }) => {
+  const variants = {
+    primary: "bg-[#00528A] text-white hover:bg-[#006BB6] shadow hover:shadow-lg",
+    accent: "bg-[#FF6B00] text-white hover:bg-[#e66000] shadow hover:shadow-lg",
+    outline: "border-2 border-white text-white hover:bg-white hover:text-[#00528A]",
+    outlineDark: "border border-[#00528A] text-[#00528A] hover:bg-[#00528A] hover:text-white"
+  };
+  return (
+    <button 
+      onClick={onClick} 
+      className={`inline-flex items-center justify-center px-6 py-3 rounded-lg font-medium transition-all duration-300 active:scale-95 ${variants[variant]} ${className}`}
+    >
+      {children}
+    </button>
+  );
+};
+
+const SectionTitle = ({ title, subtitle, light = false }) => (
+  <div className="text-center mb-12">
+    <motion.h2 
+      initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+      className={`text-3xl md:text-4xl font-bold mb-4 ${light ? 'text-white' : 'text-[#333333]'}`}
+    >
+      {title}
+    </motion.h2>
+    {subtitle && (
+      <motion.p 
+        initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.1 }}
+        className={`text-lg max-w-2xl mx-auto ${light ? 'text-blue-100' : 'text-[#666666]'}`}
+      >
+        {subtitle}
+      </motion.p>
+    )}
+    <motion.div 
+      initial={{ width: 0 }} whileInView={{ width: 60 }} viewport={{ once: true }} transition={{ delay: 0.2, duration: 0.5 }}
+      className={`h-1 mx-auto mt-6 rounded-full ${light ? 'bg-white' : 'bg-[#00528A]'}`}
+    />
+  </div>
+);
+
+const GradientPlaceholder = ({ title, className = '', overlay = false }) => (
+  <div className={`relative overflow-hidden flex items-center justify-center bg-gradient-to-br from-[#00528A] to-[#003B63] text-white ${className}`}>
+    <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white to-transparent mix-blend-overlay"></div>
+    <div className="absolute inset-0" style={{ backgroundImage: 'radial-gradient(circle, #ffffff 1px, transparent 1px)', backgroundSize: '20px 20px', opacity: 0.05 }}></div>
+    <span className="relative z-10 font-medium tracking-wider text-sm md:text-base opacity-80 px-4 text-center">{title}</span>
+    {overlay && <div className="absolute inset-0 bg-black/40 transition-opacity duration-300"></div>}
+  </div>
+);
+
+const Modal = ({ isOpen, onClose, children }) => {
+  if (!isOpen) return null;
+  return (
+    <AnimatePresence>
+      <motion.div 
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+        className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+        onClick={onClose}
+      >
+        <motion.div 
+          initial={{ scale: 0.95, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0, y: 20 }}
+          className="bg-white rounded-2xl overflow-hidden shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+          onClick={e => e.stopPropagation()}
+        >
+          {children}
+          <button onClick={onClose} className="absolute top-4 right-4 p-2 bg-gray-100 hover:bg-gray-200 rounded-full text-gray-600 transition">
+            <X className="w-5 h-5" />
+          </button>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
+  );
+};
+
+const CountUp = ({ end, duration = 2, suffix = '' }) => {
+  const [count, setCount] = useState(0);
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: "-50px" });
+
+  useEffect(() => {
+    if (isInView) {
+      let startTimestamp = null;
+      const step = (timestamp) => {
+        if (!startTimestamp) startTimestamp = timestamp;
+        const progress = Math.min((timestamp - startTimestamp) / (duration * 1000), 1);
+        const easeOut = 1 - Math.pow(1 - progress, 4);
+        setCount(Math.floor(easeOut * end));
+        if (progress < 1) window.requestAnimationFrame(step);
+      };
+      window.requestAnimationFrame(step);
+    }
+  }, [isInView, end, duration]);
+
+  return <span ref={ref}>{count}{suffix}</span>;
+};
+
+const ScrollReveal = ({ children, delay = 0, className = '', direction = 'up' }) => {
+  const directions = {
+    up: { y: 40, x: 0 }, down: { y: -40, x: 0 }, left: { x: 40, y: 0 }, right: { x: -40, y: 0 }
+  };
+  return (
+    <motion.div
+      initial={{ opacity: 0, ...directions[direction] }}
+      whileInView={{ opacity: 1, x: 0, y: 0 }}
+      viewport={{ once: true, margin: "-50px" }}
+      transition={{ duration: 0.6, delay, ease: "easeOut" }}
+      className={className}
+    >
+      {children}
+    </motion.div>
+  );
+};
+
+const PageBanner = ({ title, subtitle, breadcrumbs }) => (
+  <div className="relative h-[300px] md:h-[400px] flex items-center justify-center overflow-hidden">
+    <div className="absolute inset-0 bg-[#0A1628]">
+      <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[#00528A] to-transparent"></div>
+      <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCI+PGF0aCBkPSJNMCAwaDQwdjQwSDBWMHptMjAgMjBjMCAxMS4wNDYgOC45NTQgMjAgMjAgMjBWMjBjLTExLjA0NiAwLTIwLTguOTU0LTIwLTIweiIgZmlsbD0iIzAwNjBBNiIgZmlsbC1vcGFjaXR5PSIwLjA1IiBmaWxsLXJ1bGU9ImV2ZW5vZGQiLz48L3N2Zz4=')]"></div>
+    </div>
+    <div className="relative z-10 text-center px-4 mt-16">
+      <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-4xl md:text-5xl font-bold text-white mb-4 tracking-wider">{title}</motion.h1>
+      {subtitle && <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="text-lg text-blue-200 tracking-[0.2em] uppercase font-light">{subtitle}</motion.p>}
+      {breadcrumbs && (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }} className="mt-8 flex items-center justify-center space-x-2 text-sm text-gray-400">
+          {breadcrumbs.map((crumb, idx) => (
+            <React.Fragment key={idx}>
+              <span className={idx === breadcrumbs.length - 1 ? 'text-[#FF6B00]' : 'hover:text-white cursor-pointer'}>{crumb}</span>
+              {idx < breadcrumbs.length - 1 && <ChevronRight className="w-3 h-3 mx-1" />}
+            </React.Fragment>
+          ))}
+        </motion.div>
+      )}
+    </div>
+  </div>
+);
+
+// ==========================================
+// 3. 页面组件 (Pages)
+// ==========================================
+
+const HomeView = ({ navigate }) => {
+  const [currentSlide, setCurrentSlide] = useState(0);
+  
+  const heroSlides = [
+    {
+      title: "新材料 新技术 构建新一代电力系统", subtitle: "专注高品质电力配套设备研发制造", bgClass: "from-[#0A1628] via-[#003B63] to-[#00528A]", textOverlay: "AERIAL VIEW OF SUBSTATION",
+      primaryBtn: { text: "了解更多", action: () => navigate('about') }, secondaryBtn: { text: "联系我们", action: () => navigate('contact') }
+    },
+    {
+      title: "高品质绝缘子及电力配套解决方案", subtitle: "立足本土，放眼世界，品质铸就信任", bgClass: "from-[#002B4D] via-[#00528A] to-[#006BB6]", textOverlay: "HIGH VOLTAGE INSULATORS",
+      primaryBtn: { text: "产品中心", action: () => navigate('products') },
+    },
+    {
+      title: "值得信赖的电力设备合作伙伴", subtitle: "为各类电力工程项目提供坚实可靠的支撑", bgClass: "from-[#1A2A40] via-[#00447A] to-[#0A1628]", textOverlay: "ENGINEERING SITE INSTALLATION",
+      primaryBtn: { text: "工程案例", action: () => navigate('cases') },
+    }
+  ];
+
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentSlide((prev) => (prev + 1) % heroSlides.length), 6000);
+    return () => clearInterval(timer);
+  }, []);
+
+  return (
+    <div className="w-full">
+      {/* 区块 1：Hero Banner */}
+      <section className="relative h-screen min-h-[800px] w-full overflow-hidden bg-black">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentSlide}
+            initial={{ opacity: 0, scale: 1.05 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} transition={{ duration: 1.2, ease: "easeOut" }}
+            className={`absolute inset-0 bg-gradient-to-br ${heroSlides[currentSlide].bgClass} flex items-center justify-center`}
+          >
+            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-30 mix-blend-overlay"></div>
+            <div className="absolute text-white/5 font-bold text-[10vw] whitespace-nowrap rotate-[-10deg] select-none z-0">
+              {heroSlides[currentSlide].textOverlay}
+            </div>
+            
+            <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center mt-20">
+              <motion.h1 initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3, duration: 0.8 }} className="text-4xl md:text-6xl lg:text-7xl font-bold text-white mb-6 leading-tight drop-shadow-lg">
+                {heroSlides[currentSlide].title}
+              </motion.h1>
+              <motion.p initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.5, duration: 0.8 }} className="text-xl md:text-2xl text-blue-100 mb-10 drop-shadow-md font-light">
+                {heroSlides[currentSlide].subtitle}
+              </motion.p>
+              <motion.div initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.7, duration: 0.8 }} className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-6">
+                <Button variant="accent" className="w-full sm:w-auto px-8 py-4 text-lg" onClick={heroSlides[currentSlide].primaryBtn.action}>{heroSlides[currentSlide].primaryBtn.text}</Button>
+                {heroSlides[currentSlide].secondaryBtn && <Button variant="outline" className="w-full sm:w-auto px-8 py-4 text-lg" onClick={heroSlides[currentSlide].secondaryBtn.action}>{heroSlides[currentSlide].secondaryBtn.text}</Button>}
+              </motion.div>
+            </div>
+          </motion.div>
+        </AnimatePresence>
+        <div className="absolute bottom-12 left-0 right-0 z-20 flex justify-center space-x-3">
+          {heroSlides.map((_, idx) => (
+            <button key={idx} onClick={() => setCurrentSlide(idx)} className={`h-1.5 transition-all duration-300 rounded-full ${currentSlide === idx ? 'w-10 bg-[#FF6B00]' : 'w-6 bg-white/40 hover:bg-white/70'}`} />
+          ))}
+        </div>
+        <motion.div animate={{ y: [0, 10, 0] }} transition={{ repeat: Infinity, duration: 2 }} className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 text-white/70">
+          <div className="w-6 h-10 border-2 border-white/50 rounded-full flex justify-center p-1"><div className="w-1.5 h-3 bg-white rounded-full mt-1"></div></div>
+        </motion.div>
+      </section>
+
+      {/* 区块 2：企业核心优势 */}
+      <section className="bg-gradient-to-r from-[#0A1628] to-[#0F2440] py-16 relative z-10 -mt-2">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8 text-center divide-x-0 md:divide-x divide-white/10">
+            {[
+              { icon: Trophy, title: '严苛品控', text: '完善的质量管理体系' },
+              { icon: Users, title: '专业团队', text: '资深技术研发班底' },
+              { icon: Building, title: '可靠支撑', text: '电力系统稳定运行' },
+              { icon: Factory, title: '精益生产', text: '现代化制造工艺' },
+              { icon: Globe, title: '服务网络', text: '快速响应客户需求' },
+              { icon: Calendar, title: '持续创新', text: '紧跟行业技术前沿' },
+            ].map((stat, idx) => (
+              <div key={idx} className="flex flex-col items-center p-4">
+                <stat.icon className="w-8 h-8 text-[#FF6B00] mb-4" />
+                <div className="text-xl font-bold text-white mb-2">{stat.title}</div>
+                <div className="text-sm text-gray-400">{stat.text}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 区块 3：产品中心预览 */}
+      <section className="py-24 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-end mb-12">
+            <SectionTitle title="产品中心" subtitle="为输电、变电、配电提供全系列高品质解决方案" />
+            <button onClick={() => navigate('products')} className="hidden md:flex items-center text-[#00528A] font-medium hover:text-[#FF6B00] transition mb-8">
+              查看全部产品 <ArrowRight className="w-4 h-4 ml-2" />
+            </button>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {[
+              { name: '绝缘子系列', desc: '包含支柱、空心、线路等高压复合绝缘子及瓷绝缘产品。', icon: 'I' },
+              { name: '避雷器系列', desc: '氧化锌避雷器，为电力系统提供卓越的过电压保护。', icon: 'S' },
+              { name: '开关设备系列', desc: '高压隔离开关、环网柜等，保障电网安全运行与分配。', icon: 'W' },
+              { name: '配套组件系列', desc: '提供全系列防雷金具、绝缘护套及施工检测工具。', icon: 'C' }
+            ].map((prod, idx) => (
+              <ScrollReveal key={idx} delay={idx * 0.1}>
+                <div className="group bg-white rounded-xl overflow-hidden border border-gray-100 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 relative pb-1">
+                  <div className="absolute bottom-0 left-0 w-full h-1 bg-[#00528A] group-hover:bg-[#FF6B00] transition-colors duration-300 z-10"></div>
+                  <div className="h-48 overflow-hidden relative">
+                    <GradientPlaceholder title={`${prod.name}产品图`} className="w-full h-full group-hover:scale-105 transition-transform duration-500" />
+                    <div className="absolute top-4 right-4 w-10 h-10 bg-white/90 backdrop-blur rounded-full flex items-center justify-center font-bold text-[#00528A] shadow">{prod.icon}</div>
+                  </div>
+                  <div className="p-6">
+                    <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-[#00528A] transition-colors">{prod.name}</h3>
+                    <p className="text-gray-500 text-sm mb-4 line-clamp-3 leading-relaxed">{prod.desc}</p>
+                    <button onClick={() => navigate('products')} className="text-[#FF6B00] text-sm font-medium flex items-center group-hover:underline">了解更多 <ChevronRight className="w-4 h-4 ml-1" /></button>
+                  </div>
+                </div>
+              </ScrollReveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 区块 4：关于我们预览 */}
+      <section className="py-24 bg-[#F5F7FA]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col lg:flex-row gap-16 items-center">
+            <ScrollReveal direction="right" className="lg:w-3/5">
+              <div className="inline-block bg-[#e6f0f7] text-[#00528A] px-4 py-1 rounded-full text-sm font-bold mb-4">关于我们 ABOUT US</div>
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">以技术创新引领电力配套产业升级</h2>
+              <div className="space-y-4 text-gray-600 mb-8 leading-relaxed">
+                <p>苏州南瓷电瓷电器有限公司，是一家专注于高压及超高压输变电设备配套产品的研发、生产和销售的高新技术企业。</p>
+                <p>我们主营复合绝缘子、避雷器、高压开关等核心产品，拥有现代化的生产制造车间。公司始终坚持“品质为本，创新为魂”的理念，严格把控每一道工序，确保产品稳定可靠。</p>
+              </div>
+              <div className="grid grid-cols-2 gap-4 mb-8">
+                {[ 
+                  { label: '服务宗旨', value: '客户至上' }, 
+                  { label: '质量方针', value: '精益求精' }, 
+                  { label: '企业精神', value: '务实创新' }, 
+                  { label: '发展目标', value: '稳健致远' }
+                ].map((item, idx) => (
+                  <div key={idx} className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 flex items-center justify-between">
+                    <div className="text-gray-500 text-sm">{item.label}</div>
+                    <div className="text-lg font-bold text-[#00528A]">{item.value}</div>
+                  </div>
+                ))}
+              </div>
+              <Button onClick={() => navigate('about')} className="group">了解更多企业详情 <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" /></Button>
+            </ScrollReveal>
+            <ScrollReveal direction="left" className="lg:w-2/5 w-full">
+              <div className="relative rounded-2xl overflow-hidden shadow-2xl aspect-[4/5] group">
+                <GradientPlaceholder title="企业办公区 / 工厂车间展示" className="w-full h-full" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                <div className="absolute bottom-6 left-6 right-6 text-white">
+                  <div className="flex items-center mb-2"><div className="w-12 h-1 bg-[#FF6B00] mr-4"></div><span className="font-bold tracking-wider">现代化生产车间</span></div>
+                  <p className="text-sm text-gray-200">引进先进制造设备，实行标准化生产管理</p>
+                </div>
+              </div>
+            </ScrollReveal>
+          </div>
+        </div>
+      </section>
+
+      {/* 区块：权威资质与检验报告 (原合作伙伴区) */}
+      <section className="py-24 bg-white overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <SectionTitle 
+            title="权威资质与检验报告" 
+            subtitle="严格的质量把控，全系列产品通过多项国内国际权威检测认证" 
+          />
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            {[
+              { title: '国家级高压电器检测报告', date: '2025-08' },
+              { title: 'KEMA 国际权威认证', date: '2024-11' },
+              { title: 'ISO 9001 质量体系认证', date: '2025-01' },
+              { title: 'CE 欧盟安全认证证书', date: '2024-05' }
+            ].map((cert, idx) => (
+              <ScrollReveal key={idx} delay={idx * 0.1}>
+                <div className="bg-[#F5F7FA] p-5 rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 group cursor-pointer border border-gray-100 flex flex-col items-center">
+                  {/* 模拟 A4 报告纸张比例的画廊效果 */}
+                  <div className="w-full aspect-[3/4] rounded-xl overflow-hidden relative bg-white mb-5 border border-gray-200 shadow-inner p-2">
+                    <GradientPlaceholder title={cert.title + " 扫描件"} className="w-full h-full rounded group-hover:scale-105 transition duration-500" />
+                    {/* 悬浮查看遮罩 */}
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-[#00528A]/20 transition-colors duration-300 flex items-center justify-center">
+                      <div className="bg-white text-[#00528A] p-3 rounded-full opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 shadow-md">
+                        <Search className="w-5 h-5" />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-center w-full">
+                    <h4 className="font-bold text-gray-900 text-base mb-1 group-hover:text-[#FF6B00] transition-colors truncate px-2" title={cert.title}>
+                      {cert.title}
+                    </h4>
+                    <p className="text-xs text-gray-500">颁发日期: {cert.date}</p>
+                  </div>
+                </div>
+              </ScrollReveal>
+            ))}
+          </div>
+          
+          <div className="mt-12 text-center">
+            <Button variant="outlineDark" onClick={() => navigate('about')}>查看全部资质文件</Button>
+          </div>
+        </div>
+      </section>
+
+      {/* 区块 8：CTA 区 */}
+      <section className="relative py-24 bg-[#00528A] overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-[#00528A] to-[#006BB6]"></div>
+        <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle, #ffffff 2px, transparent 2px)', backgroundSize: '30px 30px' }}></div>
+        <div className="relative z-10 max-w-4xl mx-auto px-4 text-center">
+          <motion.h2 initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} className="text-3xl md:text-5xl font-bold text-white mb-6">需要专业的电力配套解决方案？</motion.h2>
+          <motion.p initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="text-xl text-blue-100 mb-10">我们的技术团队随时为您提供产品选型、技术咨询及定制化服务</motion.p>
+          <motion.div initial={{ opacity: 0, scale: 0.9 }} whileInView={{ opacity: 1, scale: 1 }} transition={{ delay: 0.2 }} className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-6">
+            <Button variant="accent" className="w-full sm:w-auto px-10 py-4 text-lg" onClick={() => navigate('contact')}>立即免费咨询</Button>
+            <Button variant="outline" className="w-full sm:w-auto px-10 py-4 text-lg"><Download className="w-5 h-5 mr-2" /> 下载产品目录</Button>
+          </motion.div>
+        </div>
+      </section>
+    </div>
+  );
+};
+
+const AboutView = () => {
+  return (
+    <div className="w-full pb-20 bg-white">
+      <PageBanner title="关于我们" subtitle="ABOUT US" breadcrumbs={['首页', '关于我们']} />
+      
+      {/* 简介区 */}
+      <section className="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex flex-col lg:flex-row gap-16 items-center">
+          <div className="lg:w-1/2">
+            <h2 className="text-3xl font-bold text-gray-900 mb-6">成为值得信赖的<br/><span className="text-[#00528A]">电力配套解决方案提供商</span></h2>
+            <div className="space-y-4 text-gray-600 leading-relaxed mb-8">
+              <p>苏州南瓷电瓷电器有限公司坐落于中国高新技术产业核心区，是一家集研发、制造、销售、服务于一体的科技型企业。</p>
+              <p>公司主导产品包括全系列复合绝缘子、氧化锌避雷器、高压隔离开关及配套五金配件等。产品广泛应用于各类输配电工程，并积极响应国家号召，不断拓展应用领域。</p>
+            </div>
+          </div>
+          <div className="lg:w-1/2 w-full">
+            <GradientPlaceholder title="企业全景/团队风采" className="w-full aspect-video rounded-xl shadow-2xl" />
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-16 bg-[#F5F7FA] p-8 rounded-2xl">
+          {[
+            { label: '企业愿景', value: '立足行业' }, { label: '核心理念', value: '品质为本' },
+            { label: '服务准则', value: '客户至上' }, { label: '发展动力', value: '科技创新' }
+          ].map((item, idx) => (
+            <div key={idx} className="text-center">
+              <div className="text-3xl font-bold text-[#00528A] mb-2">{item.value}</div>
+              <div className="text-gray-600 font-medium">{item.label}</div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* 发展历程 (简易时间轴) */}
+      <section className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <SectionTitle title="发展历程" subtitle="坚守初心，一步一个脚印稳健前行" />
+          <div className="relative mt-16 max-w-4xl mx-auto">
+            <div className="absolute left-1/2 -translate-x-1/2 top-0 bottom-0 w-1 bg-gray-200"></div>
+            {[
+              { phase: '初创期', title: '扬帆起航', desc: '苏州南瓷正式成立，确立了以电力配套设备为主营业务的发展方向。', pos: 'left' },
+              { phase: '成长期', title: '技术攻坚', desc: '引进先进生产设备与测试仪器，产品质量稳步提升，获得多项行业认证。', pos: 'right' },
+              { phase: '开拓期', title: '市场拓展', desc: '积极参与各类电网工程建设项目，品牌知名度及产品应用范围不断扩大。', pos: 'left' },
+              { phase: '新征程', title: '创新突破', desc: '持续加大研发投入，向着更加智能化、环保化的电力配套领域迈进。', pos: 'right' }
+            ].map((item, idx) => (
+              <ScrollReveal key={idx} className={`relative flex items-center justify-between mb-12 ${item.pos === 'left' ? 'flex-row-reverse' : ''}`}>
+                <div className="w-5/12"></div>
+                <div className="absolute left-1/2 -translate-x-1/2 w-10 h-10 rounded-full bg-white border-4 border-[#00528A] flex items-center justify-center z-10 text-[#00528A] shadow"><div className="w-3 h-3 rounded-full bg-[#FF6B00]"></div></div>
+                <div className={`w-5/12 bg-white p-6 rounded-xl shadow-lg border border-gray-100 ${item.pos === 'left' ? 'text-right' : 'text-left'}`}>
+                  <div className="text-[#FF6B00] text-xl font-bold mb-2">{item.phase}</div>
+                  <h4 className="text-lg font-bold text-gray-900 mb-2">{item.title}</h4>
+                  <p className="text-gray-500 text-sm">{item.desc}</p>
+                </div>
+              </ScrollReveal>
+            ))}
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+};
+
+const ProductDetailView = ({ productId, navigate }) => {
+  const product = PRODUCTS_DATA.find(p => p.id === productId) || PRODUCTS_DATA[0];
+
+  return (
+    <div className="w-full pb-20 bg-white"> 
+      <PageBanner title="产品详情" subtitle="PRODUCT DETAILS" breadcrumbs={['首页', '产品中心', product.category, product.name]} />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12">
+        <div className="flex flex-col lg:flex-row gap-12 mb-20">
+          <div className="lg:w-1/2">
+            <div className="rounded-xl overflow-hidden mb-4 shadow-lg border border-gray-100 aspect-square">
+              <GradientPlaceholder title={`${product.name} 大图`} className="w-full h-full" />
+            </div>
+            <div className="flex space-x-4">
+              {[1, 2, 3, 4].map(i => (
+                <div key={i} className={`flex-1 aspect-square rounded-lg overflow-hidden border-2 cursor-pointer ${i === 1 ? 'border-[#FF6B00]' : 'border-transparent hover:border-gray-300'}`}>
+                  <GradientPlaceholder title={`细节 ${i}`} className="w-full h-full text-xs" />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="lg:w-1/2 flex flex-col justify-center">
+            <div className="bg-blue-50 text-[#00528A] text-sm font-bold px-3 py-1 rounded-full inline-block w-max mb-4">{product.category}</div>
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">{product.name}</h1>
+            <div className="text-xl text-gray-500 font-mono mb-6 pb-6 border-b border-gray-200">型号: {product.model}</div>
+            <p className="text-gray-600 text-lg leading-relaxed mb-8">
+              {product.desc} 采用优质原材料制造，经过严格的出厂检验，确保在极端恶劣环境下仍能保持优异的电气和机械性能。专为现代化电网升级改造设计。
+            </p>
+            <div className="grid grid-cols-2 gap-4 mb-10">
+              <div className="bg-gray-50 p-4 rounded-lg"><div className="text-sm text-gray-500">关键参数 1</div><div className="font-bold text-gray-900">{product.specs[0]}</div></div>
+              <div className="bg-gray-50 p-4 rounded-lg"><div className="text-sm text-gray-500">关键参数 2</div><div className="font-bold text-gray-900">{product.specs[1]}</div></div>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <Button variant="accent" className="flex-1 text-lg py-4" onClick={() => navigate('contact')}><Mail className="w-5 h-5 mr-2" /> 立即在线询价</Button>
+              <Button variant="outlineDark" className="flex-1 text-lg py-4"><Download className="w-5 h-5 mr-2" /> 下载技术规格书</Button>
+            </div>
+          </div>
+        </div>
+
+        <div className="border border-gray-200 rounded-xl overflow-hidden">
+          <div className="flex border-b border-gray-200 bg-gray-50">
+            <button className="px-8 py-4 bg-white text-[#00528A] font-bold border-t-2 border-[#00528A]">技术参数</button>
+            <button className="px-8 py-4 text-gray-600 font-medium hover:text-[#00528A]">产品特点</button>
+          </div>
+          <div className="p-8">
+            <table className="w-full text-left text-sm text-gray-600">
+              <tbody>
+                {[
+                  ['额定系统电压 (kV)', '110 / 220'], ['最高系统电压 (kV)', '126 / 252'],
+                  ['额定机械弯曲负荷 (kN)', '12.5 / 100'], ['干工频耐受电压 (kV)', '230 / 460'],
+                  ['爬电距离 (mm)', '3150 / 6300'], ['绝缘子总高度 (mm)', '1250 / 2500']
+                ].map((row, i) => (
+                  <tr key={i} className={i % 2 === 0 ? 'bg-gray-50' : ''}>
+                    <td className="px-4 py-3 font-medium text-gray-900 w-1/3 border-b border-gray-100">{row[0]}</td>
+                    <td className="px-4 py-3 border-b border-gray-100">{row[1]}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const ProductsView = ({ navigate, navigateToDetail }) => {
+  const [activeTab, setActiveTab] = useState('全部');
+  const [quickViewProduct, setQuickViewProduct] = useState(null);
+  const tabs = ['全部', '绝缘子系列', '避雷器系列', '开关设备系列', '配套组件系列'];
+  const filteredProducts = activeTab === '全部' ? PRODUCTS_DATA : PRODUCTS_DATA.filter(p => p.category === activeTab);
+
+  return (
+    <div className="w-full pb-20 bg-gray-50 pt-20">
+      <div className="bg-[#0A1628] text-center py-20 relative overflow-hidden">
+        <div className="absolute inset-0 opacity-10 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCI+PGF0aCBkPSJNMCAwaDQwdjQwSDBWMHptMjAgMjBjMCAxMS4wNDYgOC45NTQgMjAgMjAgMjBWMjBjLTExLjA0NiAwLTIwLTguOTU0LTIwLTIweiIgZmlsbD0iIzAwNjBBNiIgZmlsbC1vcGFjaXR5PSIwLjA1IiBmaWxsLXJ1bGU9ImV2ZW5vZGQiLz48L3N2Zz4=')]"></div>
+        <h1 className="text-4xl font-bold text-white mb-4 relative z-10">产品中心</h1>
+        <p className="text-blue-200 relative z-10">为输变配电提供全系列高品质解决方案</p>
+      </div>
+      
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8 relative z-20">
+        <div className="bg-white p-2 rounded-2xl shadow-lg flex flex-wrap justify-center gap-2 mb-12 border border-gray-100">
+          {tabs.map(tab => (
+            <button key={tab} onClick={() => setActiveTab(tab)} className={`relative px-6 py-3 rounded-xl text-sm font-medium transition-colors ${activeTab === tab ? 'text-[#00528A]' : 'text-gray-500 hover:text-gray-900'}`}>
+              {activeTab === tab && <motion.div layoutId="product-tab" className="absolute inset-0 bg-blue-50 border border-blue-100 rounded-xl" transition={{ type: "spring", bounce: 0.2, duration: 0.6 }} />}
+              <span className="relative z-10">{tab}</span>
+            </button>
+          ))}
+        </div>
+
+        <motion.div layout className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <AnimatePresence>
+            {filteredProducts.map((product, idx) => (
+              <motion.div key={product.id} layout initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9 }} transition={{ duration: 0.3, delay: idx * 0.05 }} className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 group border border-gray-100 flex flex-col">
+                <div className="h-56 relative overflow-hidden bg-gray-50">
+                  <GradientPlaceholder title={`${product.name} 图`} className="w-full h-full group-hover:scale-105 transition duration-500" />
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <button onClick={() => setQuickViewProduct(product)} className="bg-white text-gray-900 rounded-full p-3 hover:bg-[#FF6B00] hover:text-white transition-colors transform translate-y-4 group-hover:translate-y-0 duration-300 shadow-lg"><Eye className="w-5 h-5" /></button>
+                  </div>
+                </div>
+                <div className="p-6 flex-1 flex flex-col relative">
+                  <div className="absolute top-0 left-6 -translate-y-1/2 bg-[#FF6B00] text-white text-[10px] px-2 py-1 rounded shadow-sm">{product.category}</div>
+                  <h3 className="text-lg font-bold text-gray-900 mb-1 mt-2">{product.name}</h3>
+                  <div className="text-sm text-gray-500 mb-4 font-mono">{product.model}</div>
+                  <div className="flex gap-2 mb-6">{product.specs.slice(0,2).map((s,i) => <span key={i} className="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded">{s}</span>)}</div>
+                  <div className="mt-auto pt-4 border-t border-gray-100 flex justify-between items-center">
+                    <button onClick={() => setQuickViewProduct(product)} className="text-sm text-gray-500 hover:text-[#00528A]">快捷预览</button>
+                    <button onClick={() => navigateToDetail(product.id)} className="text-sm text-[#00528A] font-medium flex items-center group-hover:text-[#FF6B00]">详细参数 <ArrowRight className="w-4 h-4 ml-1 transform group-hover:translate-x-1 transition" /></button>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </motion.div>
+      </div>
+
+      <Modal isOpen={!!quickViewProduct} onClose={() => setQuickViewProduct(null)}>
+        {quickViewProduct && (
+          <div className="flex flex-col md:flex-row">
+            <div className="md:w-1/2 bg-gray-50 min-h-[300px]"><GradientPlaceholder title={quickViewProduct.name} className="w-full h-full" /></div>
+            <div className="md:w-1/2 p-8 md:p-10 flex flex-col">
+              <span className="text-[#FF6B00] text-sm font-bold mb-2">{quickViewProduct.category}</span>
+              <h2 className="text-3xl font-bold text-gray-900 mb-2">{quickViewProduct.name}</h2>
+              <p className="text-gray-500 font-mono mb-6 pb-6 border-b">{quickViewProduct.model}</p>
+              <p className="text-gray-700 leading-relaxed mb-6">{quickViewProduct.desc}</p>
+              <div className="grid grid-cols-2 gap-4 mb-8">
+                {quickViewProduct.specs.map((s, i) => (<div key={i} className="flex items-center text-sm text-gray-600"><CheckCircle className="w-4 h-4 text-green-500 mr-2"/> {s}</div>))}
+              </div>
+              <div className="mt-auto flex gap-4">
+                <Button variant="primary" className="flex-1" onClick={() => { setQuickViewProduct(null); navigateToDetail(quickViewProduct.id); }}>查看详情页</Button>
+                <Button variant="outlineDark" className="px-4"><Download className="w-5 h-5"/></Button>
+              </div>
+            </div>
+          </div>
+        )}
+      </Modal>
+    </div>
+  );
+};
+
+const CasesView = () => {
+  const [filter, setFilter] = useState('全部');
+  const filters = ['全部', '电网工程', '配电工程', '轨道交通', '新能源', '海外项目'];
+  const filteredCases = filter === '全部' ? CASES_DATA : CASES_DATA.filter(c => c.category === filter);
+
+  return (
+    <div className="w-full pb-24 bg-white pt-20">
+      <div className="bg-[#F5F7FA] py-16 border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">工程案例</h1>
+          <p className="text-gray-600">为各类电力工程提供可靠的配套解决方案</p>
+        </div>
+      </div>
+      
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="flex flex-wrap items-center justify-center gap-3 mb-12">
+          {filters.map(f => (
+            <button key={f} onClick={() => setFilter(f)} className={`px-5 py-2 rounded-full text-sm font-medium transition-all duration-300 ${filter === f ? 'bg-[#00528A] text-white shadow-md' : 'bg-gray-50 text-gray-600 hover:bg-gray-100 hover:text-gray-900 border border-gray-200'}`}>
+              {f}
+            </button>
+          ))}
+        </div>
+        <motion.div layout className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <AnimatePresence>
+            {filteredCases.map((item, idx) => (
+              <motion.div key={item.id} layout initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} transition={{ duration: 0.4 }} className="group relative h-80 rounded-2xl overflow-hidden cursor-pointer shadow-sm hover:shadow-2xl transition-all duration-300">
+                <GradientPlaceholder title={`${item.title} 现场`} className="w-full h-full transition-transform duration-700 group-hover:scale-110" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+                <div className="absolute inset-0 bg-[#00528A]/95 translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-in-out p-8 flex flex-col justify-center">
+                  <div className="text-[#FF6B00] text-sm font-bold mb-2 transform -translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500 delay-100">{item.category} | {item.location}</div>
+                  <h3 className="text-white font-bold text-xl mb-4 transform -translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500 delay-150">{item.title}</h3>
+                  <p className="text-blue-100 text-sm leading-relaxed mb-6 transform -translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500 delay-200">{item.desc}</p>
+                </div>
+                <div className="absolute bottom-0 left-0 w-full p-6 transition-opacity duration-300 group-hover:opacity-0">
+                  <div className="flex gap-2 mb-2">
+                    <span className="bg-white/20 backdrop-blur text-white text-[10px] px-2 py-1 rounded">{item.location}</span>
+                    <span className="bg-[#FF6B00]/80 backdrop-blur text-white text-[10px] px-2 py-1 rounded">{item.product}</span>
+                  </div>
+                  <h3 className="text-white font-bold text-lg leading-tight">{item.title}</h3>
+                </div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </motion.div>
+      </div>
+    </div>
+  );
+};
+
+const NewsView = () => {
+  return (
+    <div className="w-full pb-20 bg-gray-50 pt-20">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="flex flex-col md:flex-row justify-between items-end mb-12">
+          <div><h1 className="text-4xl font-bold text-gray-900 mb-2">新闻资讯</h1><p className="text-gray-500">掌握企业脉搏，洞悉行业前沿</p></div>
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+          <div className="lg:col-span-8 space-y-6">
+            {NEWS_DATA.map((news, idx) => (
+              <motion.div key={news.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.1 }} className="bg-white rounded-2xl p-6 sm:p-8 flex flex-col sm:flex-row gap-6 shadow-sm hover:shadow-lg transition-shadow duration-300 border border-gray-100 group cursor-pointer">
+                <div className="w-full sm:w-56 aspect-[4/3] flex-shrink-0 rounded-xl overflow-hidden relative">
+                  <GradientPlaceholder title="新闻配图" className="w-full h-full group-hover:scale-105 transition duration-500" />
+                  <div className="absolute top-3 left-3 bg-white/90 backdrop-blur px-2 py-1 rounded text-center shadow-sm">
+                    <div className="text-[#00528A] font-bold text-lg leading-none">{news.date.split('-')[2]}</div>
+                    <div className="text-gray-500 text-[10px] uppercase mt-1">{news.date.split('-')[0]}-{news.date.split('-')[1]}</div>
+                  </div>
+                </div>
+                <div className="flex-1 flex flex-col justify-center">
+                  <div className="flex items-center gap-3 mb-3">
+                    <span className="text-xs font-bold text-[#FF6B00] bg-orange-50 px-2 py-1 rounded">{news.category}</span>
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-[#00528A] transition">{news.title}</h3>
+                  <p className="text-gray-600 text-sm mb-4 line-clamp-2 leading-relaxed">{news.desc}</p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+          <div className="lg:col-span-4 space-y-8">
+            <div className="bg-gradient-to-br from-[#00528A] to-[#003B63] p-8 rounded-2xl text-white shadow-lg relative overflow-hidden">
+               <Mail className="w-8 h-8 text-[#FF6B00] mb-4" />
+               <h3 className="text-xl font-bold mb-2">订阅行业通讯</h3>
+               <p className="text-blue-200 text-sm mb-6 leading-relaxed">每月获取电力行业深度分析报告及我司最新产品技术白皮书。</p>
+               <input type="email" placeholder="输入您的企业邮箱" className="w-full px-4 py-3 rounded-lg mb-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#FF6B00]" />
+               <Button variant="accent" className="w-full py-3">一键订阅</Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const ContactView = () => {
+  return (
+    <div className="w-full pb-20 bg-white pt-20">
+      <div className="bg-[#F5F7FA] py-16 border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">联系我们</h1>
+          <p className="text-gray-600 max-w-2xl mx-auto">无论您是需要产品报价、技术支持，还是探讨商务合作，我们的专业团队都随时为您提供服务。</p>
+        </div>
+      </div>
+      
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
+          <div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-12">
+              {[
+                { icon: Phone, title: '咨询热线', desc: '400-888-9999' }, 
+                { icon: Mail, title: '电子邮箱', desc: 'info@suci.com' },
+                { icon: MessageCircle, title: 'WhatsApp / WeChat', desc: '+86 138-0000-0000' }, 
+                { icon: MapPin, title: '公司总部', desc: '高新技术产业园68号' }
+              ].map((item, idx) => (
+                <div key={idx} className="bg-gray-50 p-6 rounded-2xl border border-gray-100 flex flex-col items-center text-center">
+                  <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm mb-4 text-[#00528A]"><item.icon className="w-5 h-5" /></div>
+                  <h4 className="font-bold text-gray-900 mb-1">{item.title}</h4>
+                  <p className="text-sm text-gray-500">{item.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <div className="bg-white p-8 md:p-10 rounded-2xl shadow-xl border border-gray-100 relative overflow-hidden">
+              <h3 className="text-2xl font-bold text-gray-900 mb-2 relative z-10">B2B 在线询盘</h3>
+              <p className="text-gray-500 text-sm mb-8 relative z-10">请填写您的采购需求，我们的业务团队将在 24 小时内为您提供准确报价。</p>
+              <form className="space-y-6 relative z-10" onSubmit={(e) => { e.preventDefault(); alert("询盘已提交！"); }}>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-1"><label className="text-xs font-bold text-gray-500 uppercase">姓名 Name <span className="text-[#FF6B00]">*</span></label><input type="text" required className="w-full bg-transparent border-b-2 border-gray-200 py-2 focus:outline-none focus:border-[#00528A] transition-colors" /></div>
+                  <div className="space-y-1"><label className="text-xs font-bold text-gray-500 uppercase">邮箱 E-mail <span className="text-[#FF6B00]">*</span></label><input type="email" required className="w-full bg-transparent border-b-2 border-gray-200 py-2 focus:outline-none focus:border-[#00528A] transition-colors" /></div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-1"><label className="text-xs font-bold text-gray-500 uppercase">公司名称 Company</label><input type="text" className="w-full bg-transparent border-b-2 border-gray-200 py-2 focus:outline-none focus:border-[#00528A] transition-colors" /></div>
+                  <div className="space-y-1"><label className="text-xs font-bold text-gray-500 uppercase">电话 Phone (选填)</label><input type="tel" className="w-full bg-transparent border-b-2 border-gray-200 py-2 focus:outline-none focus:border-[#00528A] transition-colors" /></div>
+                </div>
+                <div className="space-y-1"><label className="text-xs font-bold text-gray-500 uppercase">询盘内容 Requirements <span className="text-[#FF6B00]">*</span></label><textarea rows="4" required className="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 mt-1 focus:outline-none focus:border-[#00528A] focus:ring-1 focus:ring-[#00528A] transition-all resize-none"></textarea></div>
+                <Button variant="primary" className="w-full py-4 text-lg mt-4 group">发送询盘 Send Inquiry <ArrowRight className="w-5 h-5 ml-2 transform group-hover:translate-x-1 transition" /></Button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ==========================================
+// 4. 全局布局 (Navbar, Footer, App Router)
+// ==========================================
+
+const Navbar = ({ navigate, currentPath }) => {
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [currentLang, setCurrentLang] = useState('EN');
+  
+  useEffect(() => {
+    const handleScroll = () => setIsScrolled(window.scrollY > 20);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const isHome = currentPath === 'home';
+  // 首页且未滚动时透明，其他情况白色毛玻璃
+  const navBg = isScrolled ? 'bg-white/95 backdrop-blur-md shadow-sm border-b border-gray-100' : (isHome ? 'bg-transparent' : 'bg-white border-b border-gray-100');
+  const textColor = (isHome && !isScrolled) ? 'text-white' : 'text-[#333333]';
+  const logoColor = (isHome && !isScrolled) ? 'text-white' : 'text-[#00528A]';
+
+  return (
+    <header className={`fixed top-0 left-0 right-0 z-[80] transition-all duration-300 ${navBg}`}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-20">
+          <div className="flex-shrink-0 flex items-center cursor-pointer" onClick={() => navigate('home')}>
+             <span className={`text-3xl font-black tracking-tighter ${logoColor} transition-colors mr-2`}>SUCI</span>
+             <span className={`text-lg font-bold ${textColor} transition-colors hidden sm:block border-l-2 border-current pl-2`}>苏州南瓷</span>
+          </div>
+          <nav className="hidden lg:flex space-x-8">
+            {NAV_LINKS.map((link) => (
+              <button 
+                key={link.id} onClick={() => navigate(link.id)}
+                className={`text-sm font-bold transition-colors py-8 border-b-2 ${
+                  currentPath === link.id 
+                    ? (isHome && !isScrolled ? 'border-white text-white' : 'border-[#00528A] text-[#00528A]') 
+                    : `border-transparent ${textColor} hover:opacity-70`
+                }`}
+              >
+                {link.label}
+              </button>
+            ))}
+          </nav>
+          <div className={`flex items-center text-sm font-bold ${textColor}`}>
+            <div className="relative group py-8 cursor-pointer">
+              <div className="flex items-center space-x-1 hover:opacity-70 transition-opacity">
+                <Globe className="w-4 h-4" />
+                <span>{currentLang}</span>
+              </div>
+              <div className="absolute right-0 top-16 w-32 bg-white rounded-lg shadow-xl border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 py-2 overflow-hidden z-50">
+                 {LANGUAGES.map(lang => (
+                    <div 
+                      key={lang.code} 
+                      onClick={() => setCurrentLang(lang.label === 'English' ? 'EN' : lang.label === '中文' ? 'CN' : lang.code.toUpperCase())}
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-[#00528A] cursor-pointer"
+                    >
+                      {lang.label}
+                    </div>
+                 ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+  );
+};
+
+const Footer = ({ navigate }) => (
+  <footer className="bg-[#0A1628] pt-16 pb-8 text-gray-300">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
+        <div>
+          <div className="flex items-end mb-6">
+             <span className="text-3xl font-black tracking-tighter text-white mr-2 leading-none">SUCI</span>
+             <span className="text-lg font-bold text-[#FF6B00] border-l-2 border-[#FF6B00] pl-2 leading-none">苏州南瓷</span>
+          </div>
+          <p className="text-sm text-gray-400 leading-relaxed mb-6">致力成为优质的电力配套设备及解决方案提供商，专注高品质绝缘子、避雷器研发制造。</p>
+        </div>
+        <div>
+          <h4 className="text-white text-lg font-bold mb-6">产品中心</h4>
+          <ul className="space-y-3">
+            {['支柱复合绝缘子', '空心复合绝缘子', '氧化锌避雷器', '高压隔离开关'].map(item => (
+              <li key={item}><button onClick={() => navigate('products')} className="text-sm hover:text-[#FF6B00] transition flex items-center"><ChevronRight className="w-3 h-3 mr-2" /> {item}</button></li>
+            ))}
+          </ul>
+        </div>
+        <div>
+          <h4 className="text-white text-lg font-bold mb-6">快捷导航</h4>
+          <ul className="space-y-3">
+            {[ { label: '关于我们', id: 'about' }, { label: '工程案例', id: 'cases' }, { label: '新闻资讯', id: 'news' }, { label: '联系我们', id: 'contact' }].map(item => (
+              <li key={item.label}><button onClick={() => navigate(item.id)} className="text-sm hover:text-[#FF6B00] transition flex items-center"><ChevronRight className="w-3 h-3 mr-2" /> {item.label}</button></li>
+            ))}
+          </ul>
+        </div>
+        <div>
+          <h4 className="text-white text-lg font-bold mb-6">联系方式</h4>
+          <ul className="space-y-4">
+            <li className="flex items-center"><Phone className="w-5 h-5 mr-3 text-[#FF6B00]" /><span className="text-sm">400-888-9999</span></li>
+            <li className="flex items-center"><Mail className="w-5 h-5 mr-3 text-[#FF6B00]" /><span className="text-sm">info@suci.com</span></li>
+          </ul>
+        </div>
+      </div>
+      <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center text-xs text-gray-500">
+        <p>© 2026 苏州南瓷电瓷电器有限公司 版权所有. | 某ICP备12345678号-1</p>
+        <div className="flex space-x-4 mt-4 md:mt-0">
+          <span className="hover:text-white cursor-pointer">隐私政策</span>
+          <span className="hover:text-white cursor-pointer">法律声明</span>
+        </div>
+      </div>
+    </div>
+  </footer>
+);
+
+export default function App() {
+  const [route, setRoute] = useState({ path: 'home', params: {} });
+  
+  const navigate = (path, params = {}) => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setRoute({ path, params });
+  };
+
+  const renderView = () => {
+    switch (route.path) {
+      case 'home': return <HomeView navigate={navigate} />;
+      case 'about': return <AboutView navigate={navigate} />;
+      case 'products': return <ProductsView navigate={navigate} navigateToDetail={(id) => navigate('product-detail', {id})} />;
+      case 'product-detail': return <ProductDetailView productId={route.params.id} navigate={navigate} />;
+      case 'cases': return <CasesView />;
+      case 'news': return <NewsView />;
+      case 'contact': return <ContactView />;
+      default: return <HomeView navigate={navigate} />;
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex flex-col font-sans bg-white text-gray-900">
+      <Navbar navigate={navigate} currentPath={route.path} />
+      <main className="flex-1">
+        <AnimatePresence mode="wait">
+          <motion.div key={route.path + (route.params?.id || '')} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
+            {renderView()}
+          </motion.div>
+        </AnimatePresence>
+      </main>
+      <Footer navigate={navigate} />
+    </div>
+  );
+}
