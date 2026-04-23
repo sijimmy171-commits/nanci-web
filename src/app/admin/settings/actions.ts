@@ -175,6 +175,8 @@ export async function updateSiteConfig(formData: FormData): Promise<void> {
     },
   });
 
+  let redirectTarget = '/admin/settings?status=saved&translation=manual';
+
   try {
     const resolvedWechatQrUrl = await saveUploadedFile({
       file: wechatQrFile instanceof File ? wechatQrFile : null,
@@ -208,6 +210,7 @@ export async function updateSiteConfig(formData: FormData): Promise<void> {
     }
 
     await saveSiteContentOverrides(finalOverrides);
+    redirectTarget = `/admin/settings?status=saved&translation=${translationStatus}`;
 
     revalidatePath('/');
     for (const locale of publishedLocales) {
@@ -216,9 +219,10 @@ export async function updateSiteConfig(formData: FormData): Promise<void> {
       revalidatePath(`/${locale}/products`);
     }
     revalidatePath('/admin/settings');
-    redirect(`/admin/settings?status=saved&translation=${translationStatus}`);
   } catch (error) {
     console.error('Failed to update config:', error);
     throw new Error('数据库更新失败');
   }
+
+  redirect(redirectTarget);
 }

@@ -128,11 +128,12 @@ export async function createProduct(formData: FormData): Promise<void> {
       revalidatePath(`/${locale}/products`);
       revalidatePath(`/${locale}/products/${product.id}`);
     }
-    redirect('/admin/products');
   } catch (error) {
     console.error('Failed to create product:', error);
     throw new Error('产品创建失败，请稍后重试。');
   }
+
+  redirect('/admin/products');
 }
 
 export async function updateProduct(productId: string, formData: FormData): Promise<void> {
@@ -220,11 +221,12 @@ export async function updateProduct(productId: string, formData: FormData): Prom
       revalidatePath(`/${locale}/products`);
       revalidatePath(`/${locale}/products/${productId}`);
     }
-    redirect('/admin/products');
   } catch (error) {
     console.error('Failed to update product:', error);
     throw new Error('产品更新失败，请稍后重试。');
   }
+
+  redirect('/admin/products');
 }
 
 export async function deleteProduct(productId: string): Promise<ActionResult> {
