@@ -94,4 +94,16 @@
 ## 下一步优先级
 1. 配置 SMTP 邮箱发送环境变量并验证真实邮件送达
 2. 根据正式邮箱与品牌信息，替换前台页脚/联系页中的演示邮箱和电话
-3. 上线后做一次真实后台人工验收：登录、保存、上传、询盘状态流转
+3. 上线后继续做真实人工验收：上传新二维码 / 产品图片 / PDF，以及询盘状态流转
+
+## 2026-04-24 后台保存错误修复记录
+- [x] 读取 `AGENTS.md`、`implementation_plan.md`、`task.md`
+- [x] 按 Next.js 16 要求阅读本地文档：Server Actions / Forms / Authentication / Proxy / redirect
+- [x] 查看 Vercel runtime logs，确认 `/admin/settings` 保存失败根因是 `SiteConfig.updatedAt` NOT NULL，而原生 upsert 插入时未赋值
+- [x] 修复 `saveSiteConfig`：写入 / 更新时显式设置 `updatedAt = CURRENT_TIMESTAMP`
+- [x] 为 `SiteConfig` 联系方式列与 `contentOverrides` JSONB 列增加运行时 `ADD COLUMN IF NOT EXISTS` 保护
+- [x] 为设置页相关原生数据库读写增加一次瞬时连接错误重试，避免 Supabase pooler 偶发连接关闭导致后台错误页
+- [x] 按 `src/app` 项目约定将后台访问保护从根目录 `proxy.ts` 迁移到 `src/proxy.ts`
+- [x] 验证：`npx tsc --noEmit`、`npm run lint`、`npm run build`
+- [x] 浏览器验证：后台设置页空 WeChat 文件输入 + 电话保存成功，跳转保存成功状态
+- [x] Smoke test：未登录后台跳转登录；产品、案例、新闻、产品资料库、关于我们检测报告、询盘及状态筛选页面均可渲染

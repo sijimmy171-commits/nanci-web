@@ -1,4 +1,5 @@
 ﻿import { Prisma } from '@prisma/client';
+import { withDatabaseRetry } from '@/lib/db-retry';
 import { prisma } from '@/lib/prisma';
 import { defaultLocale, locales, type Locale } from '@/lib/i18n';
 
@@ -105,20 +106,43 @@ type ContentRow = {
   contentOverrides: Prisma.JsonValue | null;
 };
 
+let siteContentOverridesColumnReady: Promise<void> | null = null;
+
+function ensureSiteContentOverridesColumn() {
+  siteContentOverridesColumnReady ??= withDatabaseRetry(() =>
+    prisma.$executeRawUnsafe('ALTER TABLE "SiteConfig" ADD COLUMN IF NOT EXISTS "contentOverrides" JSONB')
+  )
+    .then(() => undefined)
+    .catch((error) => {
+      siteContentOverridesColumnReady = null;
+      throw error;
+    });
+
+  return siteContentOverridesColumnReady;
+}
+
 export async function getSiteContentOverrides(): Promise<SiteContentOverrides> {
-  const rows = await prisma.$queryRawUnsafe<ContentRow[]>(
-    'SELECT "contentOverrides" FROM "SiteConfig" WHERE id = $1 LIMIT 1',
-    'default'
+  await ensureSiteContentOverridesColumn();
+
+  const rows = await withDatabaseRetry(() =>
+    prisma.$queryRawUnsafe<ContentRow[]>(
+      'SELECT "contentOverrides" FROM "SiteConfig" WHERE id = $1 LIMIT 1',
+      'default'
+    )
   );
 
   return normalizeSiteContentOverrides(rows[0]?.contentOverrides ?? null);
 }
 
 export async function saveSiteContentOverrides(overrides: SiteContentOverrides) {
-  await prisma.$executeRawUnsafe(
-    'UPDATE "SiteConfig" SET "contentOverrides" = $1::jsonb WHERE id = $2',
-    JSON.stringify(overrides),
-    'default'
+  await ensureSiteContentOverridesColumn();
+
+  await withDatabaseRetry(() =>
+    prisma.$executeRawUnsafe(
+      'UPDATE "SiteConfig" SET "contentOverrides" = $1::jsonb WHERE id = $2',
+      JSON.stringify(overrides),
+      'default'
+    )
   );
 }
 

@@ -20,6 +20,8 @@
 - 联系表单、询盘存储、后台列表与邮件通知已补齐 `phone` 字段链路
 - 后台询盘中心已支持 `PENDING / READ / REPLIED` 状态流转、状态筛选与服务端更新动作
 - 后台已补强 Next.js 16 `proxy.ts` 访问保护，并为后台 Server Action 增加管理员权限校验
+- 已修复后台设置页保存联系方式时的生产错误：`SiteConfig.updatedAt` 在原生 upsert 中显式写入，并为联系方式 / JSON 扩展列补齐运行时自修复与瞬时数据库连接重试
+- 已按 Next.js 16 `src/app` 项目约定将后台访问保护迁移到 `src/proxy.ts`，未登录访问后台数据页现返回登录页 307 跳转
 - 后台产品列表已支持真实搜索、一级分类、具体分类与归档状态筛选，并标记旧分类兼容 / 需重新归类数据
 - 已修复 Next.js 16 生产构建链路：`npm run build` 现使用 `next build --webpack` 并通过验证
 - 前台多语言 CMS 页面与后台管理页已统一设为运行时动态渲染，避免 build 阶段并发访问数据库
@@ -107,5 +109,8 @@
 - [x] 访问 `/admin/products?primary=insulators&status=legacy`，确认后台产品筛选页可渲染并展示分类校对信息
 - [x] 2026-04-24 本地生产 smoke test：`/zh` 与 `/admin/login` 可访问，未登录访问后台数据页仅返回登录鉴权壳，不渲染后台业务内容
 - [x] 2026-04-24 完整自动验证：`npx tsc --noEmit`、`npm run lint`、`npm run build` 全部通过
+- [x] 2026-04-24 后台设置页生产错误定位：Vercel runtime logs 确认 `POST /admin/settings` 因 `SiteConfig.updatedAt` NOT NULL 且原生 SQL 未赋值触发 `23502`
+- [x] 2026-04-24 本地生产浏览器验证：登录后台后在设置页不上传 WeChat 二维码、保留空 file input 并保存电话，成功跳转 `/admin/settings?status=saved&translation=manual`
+- [x] 2026-04-24 后台 smoke test：未登录访问 `/admin/products` 返回 `307 -> /admin/login?callbackUrl=...`；已登录访问产品、案例、新闻、产品资料库、关于我们检测报告、询盘及询盘状态筛选页面均有内容渲染
 - [ ] 配置 SMTP 后，验证真实询盘邮件送达
 - [ ] 验证询盘状态更新按钮的完整人工操作流程
