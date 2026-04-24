@@ -1,6 +1,7 @@
 import React from 'react';
 import Image from 'next/image';
 import { Info, Save } from 'lucide-react';
+import { requireAdminSession } from '@/lib/admin-auth';
 import { getAboutContent } from '@/lib/about-content';
 import { updateAboutContent } from './actions';
 
@@ -57,6 +58,8 @@ export default async function AdminAboutPage({
 }: {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }) {
+  await requireAdminSession({ redirectToLogin: true });
+
   const params = await (searchParams ?? Promise.resolve({} as Record<string, string | string[] | undefined>));
   const about = await getAboutContent();
   const translationReady = Boolean(process.env.OPENAI_API_KEY);

@@ -24,7 +24,7 @@
 - 已修复 Next.js 16 生产构建链路：`npm run build` 现使用 `next build --webpack` 并通过验证
 - 前台多语言 CMS 页面与后台管理页已统一设为运行时动态渲染，避免 build 阶段并发访问数据库
 - 上传资源已接入生产持久化策略：优先使用 Supabase Storage，未配置时回退本地 `public/uploads`
-- 当前主要剩余工作集中在：正式部署环境变量、域名与上线检查
+- 当前主要剩余工作集中在：SMTP 邮箱发送配置与上线后人工验收
 
 ## 用户与业务核心
 > [!IMPORTANT]
@@ -63,8 +63,8 @@
 ### 部署与上线 [Phase 6]
 - **托管平台**：Vercel
 - **资源存储**：Supabase Storage，用于产品图片、微信二维码、检测报告图片与产品资料 PDF
-- **域名接入**：待接入正式域名与 DNS 配置
-- **生产配置**：待整理数据库、认证、邮件、翻译、Supabase Storage 等环境变量
+- **域名接入**：已接入 `insulatorschina.com` 与 `www.insulatorschina.com`，Cloudflare DNS 与 SSL/TLS Full 已完成基础配置
+- **生产配置**：数据库、认证与 Supabase Storage 已完成；SMTP 邮箱发送仍待配置，OpenAI 自动翻译可按需后续配置
 
 ### 上传资源策略 [新增]
 - **生产环境**：配置 `SUPABASE_URL`、`SUPABASE_SERVICE_ROLE_KEY`、`SUPABASE_STORAGE_BUCKET` 后，上传文件会写入 Supabase Storage，并返回公开访问 URL
@@ -76,13 +76,13 @@
 ---
 
 ## 仍需完成的重点事项
-- 生产环境变量整理与部署平台配置
-- 正式部署、域名接入与上线检查
+- SMTP 邮箱发送环境变量配置与真实邮件送达验证
+- 上线后后台人工验收：登录、保存、上传、询盘状态流转
 
 ## 下一步执行建议
-1. 整理生产环境变量与部署环境配置，包括数据库、认证密钥、SMTP、OpenAI 翻译与 Supabase Storage。
-2. 在 Supabase 创建公开读取的 Storage bucket，并将 bucket 名写入 `SUPABASE_STORAGE_BUCKET`。
-3. 准备正式域名、DNS、上线检查清单与首轮生产验证。
+1. 在 Vercel 配置 `SMTP_HOST`、`SMTP_PORT`、`SMTP_USER`、`SMTP_PASS`、`ADMIN_RECEIVE_EMAIL`，然后重新部署并提交一条测试询盘。
+2. 将前台联系方式从演示值替换为正式邮箱、电话、WhatsApp 与地址。
+3. 上线后在正式域名完成一次后台人工验收，覆盖保存、上传、前台同步和询盘状态流转。
 
 ## 验证计划
 
@@ -105,4 +105,7 @@
 - [x] 未登录访问 `/admin/products` 返回 `307` 并重定向到 `/admin/login?callbackUrl=...`
 - [x] 访问 `/admin/login` 返回 `200`
 - [x] 访问 `/admin/products?primary=insulators&status=legacy`，确认后台产品筛选页可渲染并展示分类校对信息
+- [x] 2026-04-24 本地生产 smoke test：`/zh` 与 `/admin/login` 可访问，未登录访问后台数据页仅返回登录鉴权壳，不渲染后台业务内容
+- [x] 2026-04-24 完整自动验证：`npx tsc --noEmit`、`npm run lint`、`npm run build` 全部通过
+- [ ] 配置 SMTP 后，验证真实询盘邮件送达
 - [ ] 验证询盘状态更新按钮的完整人工操作流程

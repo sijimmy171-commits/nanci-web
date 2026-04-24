@@ -1,12 +1,10 @@
-﻿'use client';
-
 import React from 'react';
 import Link from 'next/link';
-import { useSession } from 'next-auth/react';
 import { Users, Package, MessageSquare, TrendingUp, ArrowUpRight, Settings, FolderOpen } from 'lucide-react';
+import { requireAdminSession } from '@/lib/admin-auth';
 
-export default function AdminDashboard() {
-  const { data: session } = useSession();
+export default async function AdminDashboard() {
+  const session = await requireAdminSession({ redirectToLogin: true });
 
   const stats = [
     { label: '在线产品', value: '动态目录', icon: Package, color: 'text-bmw-blue', bg: 'bg-bmw-blue/10' },

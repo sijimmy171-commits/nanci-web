@@ -84,10 +84,14 @@
 说明：Next.js 16 默认 Turbopack 在当前 Windows 环境中遇到 `.next` 文件锁定 / rename 问题，已将构建脚本切换为 `next build --webpack`；前台多语言 CMS 页面与后台管理页已设为运行时动态渲染，避免 build 阶段并发访问数据库。
 - [x] 接入图片/PDF 上传后的生产环境资源策略
 说明：已选择 Supabase Storage。配置 `SUPABASE_URL`、`SUPABASE_SERVICE_ROLE_KEY`、`SUPABASE_STORAGE_BUCKET` 后，产品图片、微信二维码、检测报告图片与产品资料 PDF 会上传到 Supabase Storage；未配置时保留本地 `public/uploads` 回退。可选配置 `SUPABASE_STORAGE_PUBLIC_URL` 用于自定义资源域名。
-- [ ] 整理生产环境变量（DATABASE_URL、NEXTAUTH_SECRET、SMTP、OPENAI 等）
-- [ ] 配置正式域名、部署平台与上线检查清单
+- [/] 整理生产环境变量（DATABASE_URL、NEXTAUTH_SECRET、SMTP、OPENAI 等）
+说明：数据库、认证、Supabase Storage 与域名相关配置已完成；当前明确剩余 SMTP 邮箱发送配置，`OPENAI_API_KEY` 自动翻译可按需后续配置。
+- [x] 配置正式域名、部署平台与上线检查清单
+说明：项目已接入 Vercel 与 `insulatorschina.com` / `www.insulatorschina.com`，Cloudflare DNS 与 SSL/TLS Full 已完成基础验证。
+- [x] 完成 2026-04-24 发布前完整测试
+说明：已完成 `npx tsc --noEmit`、`npm run lint`、`npm run build`；本地生产 smoke test 确认 `/zh` 与 `/admin/login` 可访问，未登录访问后台数据页仅返回登录鉴权壳，不再泄露后台内容。线上页面通过 Vercel fetch 验证主要前台路由返回 200。
 
 ## 下一步优先级
-1. 整理生产环境变量与部署平台配置
-2. 在 Supabase 创建公开读取的 Storage bucket 并配置上传环境变量
-3. 准备正式域名、DNS 与上线检查清单
+1. 配置 SMTP 邮箱发送环境变量并验证真实邮件送达
+2. 根据正式邮箱与品牌信息，替换前台页脚/联系页中的演示邮箱和电话
+3. 上线后做一次真实后台人工验收：登录、保存、上传、询盘状态流转

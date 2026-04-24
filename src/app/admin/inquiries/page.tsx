@@ -1,6 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { MessageSquare, Mail, Clock, Building, Package, Phone, Eye, Reply, Inbox } from 'lucide-react';
+import { requireAdminSession } from '@/lib/admin-auth';
 import { listInquiries, getInquiryStatusCounts, isInquiryStatus, type InquiryStatus } from '@/lib/inquiries';
 import { updateInquiryStatusAction } from './actions';
 
@@ -35,6 +36,8 @@ export default async function AdminInquiriesPage({
 }: {
   searchParams: Promise<{ status?: string | string[] | undefined }>;
 }) {
+  await requireAdminSession({ redirectToLogin: true });
+
   const query = await searchParams;
   const activeFilter = getActiveFilter(query.status);
   const [inquiries, counts] = await Promise.all([listInquiries(), getInquiryStatusCounts()]);

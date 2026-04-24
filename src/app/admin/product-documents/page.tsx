@@ -1,10 +1,13 @@
 import React from 'react';
 import Link from 'next/link';
 import { Edit2, ExternalLink, FileText, Plus } from 'lucide-react';
+import { requireAdminSession } from '@/lib/admin-auth';
 import { listProductDocuments } from '@/lib/product-documents';
 import DeleteProductDocumentButton from './DeleteButton';
 
 export default async function AdminProductDocumentsPage() {
+  await requireAdminSession({ redirectToLogin: true });
+
   const documents = await listProductDocuments();
 
   return (

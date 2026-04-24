@@ -1,6 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { Edit2, ExternalLink, Package, Plus, Search } from 'lucide-react';
+import { requireAdminSession } from '@/lib/admin-auth';
 import { listProducts, type ProductRecord } from '@/lib/product-content';
 import {
   getAllSpecificCategoryOptions,
@@ -77,6 +78,8 @@ function filterProducts(
 }
 
 export default async function AdminProductsPage({ searchParams }: { searchParams: SearchParams }) {
+  await requireAdminSession({ redirectToLogin: true });
+
   const params = await searchParams;
   const query = getSingleParam(params.q)?.trim() ?? '';
   const primaryParam = getSingleParam(params.primary);

@@ -2,9 +2,12 @@ import React from 'react';
 import Link from 'next/link';
 import { Save, ArrowLeft, Package } from 'lucide-react';
 import ProductCategoryFields from '@/components/admin/ProductCategoryFields';
+import { requireAdminSession } from '@/lib/admin-auth';
 import { createProduct } from '../actions';
 
-export default function NewProductPage() {
+export default async function NewProductPage() {
+  await requireAdminSession({ redirectToLogin: true });
+
   const translationReady = Boolean(process.env.OPENAI_API_KEY);
 
   return (

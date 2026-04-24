@@ -1,10 +1,13 @@
 import React from 'react';
 import { notFound } from 'next/navigation';
 import EditorialForm from '@/components/admin/EditorialForm';
+import { requireAdminSession } from '@/lib/admin-auth';
 import { getEditorialRecordById } from '@/lib/editorial';
 import { updateNewsArticle } from '../../actions';
 
 export default async function EditNewsArticlePage({ params }: { params: Promise<{ id: string }> }) {
+  await requireAdminSession({ redirectToLogin: true });
+
   const { id } = await params;
   const record = await getEditorialRecordById('news-article', id);
   if (!record) notFound();

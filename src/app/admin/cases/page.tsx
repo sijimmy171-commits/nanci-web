@@ -1,11 +1,14 @@
 import React from 'react';
 import Link from 'next/link';
 import { Briefcase, Edit2, ExternalLink, Plus } from 'lucide-react';
+import { requireAdminSession } from '@/lib/admin-auth';
 import { defaultLocale } from '@/lib/i18n';
 import { listEditorialRecords } from '@/lib/editorial';
 import DeleteCaseButton from './DeleteButton';
 
 export default async function AdminCasesPage() {
+  await requireAdminSession({ redirectToLogin: true });
+
   const cases = await listEditorialRecords('case-study');
 
   return (

@@ -1,6 +1,7 @@
 import 'server-only';
 
 import { getServerSession } from 'next-auth';
+import { redirect } from 'next/navigation';
 import { authOptions } from '@/lib/auth-options';
 
 type AdminSessionUser = {
@@ -8,11 +9,15 @@ type AdminSessionUser = {
   role?: string | null;
 };
 
-export async function requireAdminSession() {
+export async function requireAdminSession(options?: { redirectToLogin?: boolean }) {
   const session = await getServerSession(authOptions);
   const user = session?.user as AdminSessionUser | undefined;
 
   if (!user?.email || user.role !== 'ADMIN') {
+    if (options?.redirectToLogin) {
+      redirect('/admin/login');
+    }
+
     throw new Error('Unauthorized');
   }
 

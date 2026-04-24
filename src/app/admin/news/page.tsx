@@ -1,11 +1,14 @@
 import React from 'react';
 import Link from 'next/link';
 import { Edit2, ExternalLink, Newspaper, Plus } from 'lucide-react';
+import { requireAdminSession } from '@/lib/admin-auth';
 import { defaultLocale } from '@/lib/i18n';
 import { listEditorialRecords } from '@/lib/editorial';
 import DeleteNewsButton from './DeleteButton';
 
 export default async function AdminNewsPage() {
+  await requireAdminSession({ redirectToLogin: true });
+
   const articles = await listEditorialRecords('news-article');
 
   return (

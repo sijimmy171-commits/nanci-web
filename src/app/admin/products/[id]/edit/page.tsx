@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { Save, ChevronLeft } from 'lucide-react';
 import ProductCategoryFields from '@/components/admin/ProductCategoryFields';
+import { requireAdminSession } from '@/lib/admin-auth';
 import { getProductById, getProductTranslations } from '@/lib/product-content';
 import { updateProduct } from '../../actions';
 
@@ -11,6 +12,8 @@ export default async function EditProductPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  await requireAdminSession({ redirectToLogin: true });
+
   const { id } = await params;
 
   const product = await getProductById(id);

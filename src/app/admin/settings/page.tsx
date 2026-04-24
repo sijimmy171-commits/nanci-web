@@ -1,5 +1,6 @@
 ﻿import React from 'react';
 import { Save, Info } from 'lucide-react';
+import { requireAdminSession } from '@/lib/admin-auth';
 import { getSiteConfig } from '@/lib/site-config';
 import { getSiteContentOverrides } from '@/lib/site-content-overrides';
 import { updateSiteConfig } from './actions';
@@ -18,6 +19,8 @@ export default async function SettingsPage({
 }: {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }) {
+  await requireAdminSession({ redirectToLogin: true });
+
   const translationReady = Boolean(process.env.OPENAI_API_KEY);
   const [params, config, overrides] = await Promise.all([
     searchParams ?? Promise.resolve({} as Record<string, string | string[] | undefined>),
