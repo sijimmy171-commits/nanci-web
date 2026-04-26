@@ -2,12 +2,10 @@ import React from 'react';
 import Link from 'next/link';
 import { Phone, Mail, ChevronRight } from 'lucide-react';
 import { getLocalizedPath, type Locale } from '@/lib/i18n';
-import { getSiteConfig } from '@/lib/site-config';
+import type { SiteConfigRecord } from '@/lib/site-config';
 import type { SiteDictionary } from '@/lib/site-content';
 
-export default async function Footer({ locale, dictionary }: { locale: Locale; dictionary: SiteDictionary }) {
-  const config = await getSiteConfig();
-
+export default function Footer({ locale, dictionary, config }: { locale: Locale; dictionary: SiteDictionary; config: SiteConfigRecord | null }) {
   return (
     <footer className="bg-bmw-lightgray border-t border-gray-200 pt-20 pb-10 text-gray-600">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

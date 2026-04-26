@@ -1,7 +1,8 @@
-﻿import type { Metadata } from 'next';
+import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import { HtmlLangSetter } from '@/components/HtmlLangSetter';
 import { getSiteConfig } from '@/lib/site-config';
 import { getResolvedDictionary } from '@/lib/site-content';
 import { getLocaleDirection, hasLocale, locales, type Locale } from '@/lib/i18n';
@@ -33,14 +34,16 @@ export default async function LocaleLayout({ children, params }: { children: Rea
   if (!hasLocale(lang)) notFound();
 
   const locale = lang as Locale;
+  const dir = getLocaleDirection(locale);
   const config = await getSiteConfig();
   const dictionary = await getResolvedDictionary(locale, config);
 
   return (
-    <div lang={locale} dir={getLocaleDirection(locale)}>
+    <div lang={locale} dir={dir}>
+      <HtmlLangSetter lang={locale} dir={dir === 'rtl' ? 'rtl' : undefined} />
       <Header locale={locale} dictionary={dictionary} />
       <main className="min-h-screen">{children}</main>
-      <Footer locale={locale} dictionary={dictionary} />
+      <Footer locale={locale} dictionary={dictionary} config={config} />
     </div>
   );
 }

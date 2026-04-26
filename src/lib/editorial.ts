@@ -95,48 +95,57 @@ export function normalizeEditorialTranslations(value: unknown): EditorialTransla
   };
 }
 
-export async function ensureEditorialTables() {
-  await prisma.$executeRawUnsafe(`
-    CREATE TABLE IF NOT EXISTS "CaseStudy" (
-      id TEXT PRIMARY KEY,
-      slug TEXT NOT NULL UNIQUE,
-      title TEXT NOT NULL,
-      summary TEXT NOT NULL,
-      content TEXT NOT NULL,
-      category TEXT NOT NULL,
-      region TEXT,
-      product TEXT,
-      "coverImageUrl" TEXT,
-      tags JSONB DEFAULT '[]'::jsonb,
-      published BOOLEAN DEFAULT true,
-      "publishedAt" TIMESTAMP(3),
-      "sortOrder" INTEGER DEFAULT 0,
-      "contentTranslations" JSONB,
-      "createdAt" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
-      "updatedAt" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP
-    )
-  `);
+let editorialTablesReady: Promise<void> | null = null;
 
-  await prisma.$executeRawUnsafe(`
-    CREATE TABLE IF NOT EXISTS "NewsArticle" (
-      id TEXT PRIMARY KEY,
-      slug TEXT NOT NULL UNIQUE,
-      title TEXT NOT NULL,
-      summary TEXT NOT NULL,
-      content TEXT NOT NULL,
-      category TEXT NOT NULL,
-      region TEXT,
-      product TEXT,
-      "coverImageUrl" TEXT,
-      tags JSONB DEFAULT '[]'::jsonb,
-      published BOOLEAN DEFAULT true,
-      "publishedAt" TIMESTAMP(3),
-      "sortOrder" INTEGER DEFAULT 0,
-      "contentTranslations" JSONB,
-      "createdAt" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
-      "updatedAt" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP
-    )
-  `);
+export function ensureEditorialTables() {
+  editorialTablesReady ??= (async () => {
+    await prisma.$executeRawUnsafe(`
+      CREATE TABLE IF NOT EXISTS "CaseStudy" (
+        id TEXT PRIMARY KEY,
+        slug TEXT NOT NULL UNIQUE,
+        title TEXT NOT NULL,
+        summary TEXT NOT NULL,
+        content TEXT NOT NULL,
+        category TEXT NOT NULL,
+        region TEXT,
+        product TEXT,
+        "coverImageUrl" TEXT,
+        tags JSONB DEFAULT '[]'::jsonb,
+        published BOOLEAN DEFAULT true,
+        "publishedAt" TIMESTAMP(3),
+        "sortOrder" INTEGER DEFAULT 0,
+        "contentTranslations" JSONB,
+        "createdAt" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
+        "updatedAt" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    await prisma.$executeRawUnsafe(`
+      CREATE TABLE IF NOT EXISTS "NewsArticle" (
+        id TEXT PRIMARY KEY,
+        slug TEXT NOT NULL UNIQUE,
+        title TEXT NOT NULL,
+        summary TEXT NOT NULL,
+        content TEXT NOT NULL,
+        category TEXT NOT NULL,
+        region TEXT,
+        product TEXT,
+        "coverImageUrl" TEXT,
+        tags JSONB DEFAULT '[]'::jsonb,
+        published BOOLEAN DEFAULT true,
+        "publishedAt" TIMESTAMP(3),
+        "sortOrder" INTEGER DEFAULT 0,
+        "contentTranslations" JSONB,
+        "createdAt" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
+        "updatedAt" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+  })().catch((error) => {
+    editorialTablesReady = null;
+    throw error;
+  });
+
+  return editorialTablesReady;
 }
 
 type EditorialRow = {

@@ -85,11 +85,20 @@ export function normalizeProductTranslations(value: unknown): ProductTranslation
   };
 }
 
-export async function ensureProductColumns() {
-  await prisma.$executeRawUnsafe('ALTER TABLE "Product" ADD COLUMN IF NOT EXISTS "contentTranslations" JSONB');
-  await prisma.$executeRawUnsafe('ALTER TABLE "Product" ADD COLUMN IF NOT EXISTS "primaryCategory" TEXT');
-  await prisma.$executeRawUnsafe('ALTER TABLE "Product" ADD COLUMN IF NOT EXISTS "secondaryCategory" TEXT');
-  await prisma.$executeRawUnsafe('ALTER TABLE "Product" ADD COLUMN IF NOT EXISTS "tertiaryCategory" TEXT');
+let productColumnsReady: Promise<void> | null = null;
+
+export function ensureProductColumns() {
+  productColumnsReady ??= (async () => {
+    await prisma.$executeRawUnsafe('ALTER TABLE "Product" ADD COLUMN IF NOT EXISTS "contentTranslations" JSONB');
+    await prisma.$executeRawUnsafe('ALTER TABLE "Product" ADD COLUMN IF NOT EXISTS "primaryCategory" TEXT');
+    await prisma.$executeRawUnsafe('ALTER TABLE "Product" ADD COLUMN IF NOT EXISTS "secondaryCategory" TEXT');
+    await prisma.$executeRawUnsafe('ALTER TABLE "Product" ADD COLUMN IF NOT EXISTS "tertiaryCategory" TEXT');
+  })().catch((error) => {
+    productColumnsReady = null;
+    throw error;
+  });
+
+  return productColumnsReady;
 }
 
 function normalizeCategoryFields(row: {

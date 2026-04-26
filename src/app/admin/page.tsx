@@ -1,16 +1,48 @@
 import React from 'react';
 import Link from 'next/link';
-import { Users, Package, MessageSquare, TrendingUp, ArrowUpRight, Settings, FolderOpen } from 'lucide-react';
+import { Package, MessageSquare, ArrowUpRight, Settings, FolderOpen, FileText, Newspaper } from 'lucide-react';
 import { requireAdminSession } from '@/lib/admin-auth';
+import { prisma } from '@/lib/prisma';
+import { getInquiryStatusCounts } from '@/lib/inquiries';
+import { ensureEditorialTables } from '@/lib/editorial';
+import { ensureProductColumns } from '@/lib/product-content';
+
+async function getDashboardStats() {
+  try {
+    await Promise.all([ensureProductColumns(), ensureEditorialTables()]);
+
+    const [productCount, inquiryCounts, caseCount, newsCount] = await Promise.all([
+      prisma.product.count().catch(() => 0),
+      getInquiryStatusCounts().catch(() => ({ total: 0, PENDING: 0, READ: 0, REPLIED: 0 })),
+      prisma.$queryRawUnsafe<[{ count: bigint }]>('SELECT COUNT(*) AS count FROM "CaseStudy"')
+        .then((rows) => Number(rows[0]?.count ?? 0))
+        .catch(() => 0),
+      prisma.$queryRawUnsafe<[{ count: bigint }]>('SELECT COUNT(*) AS count FROM "NewsArticle"')
+        .then((rows) => Number(rows[0]?.count ?? 0))
+        .catch(() => 0),
+    ]);
+
+    return { productCount, inquiryCounts, caseCount, newsCount };
+  } catch (error) {
+    console.error('Failed to load dashboard stats:', error);
+    return {
+      productCount: 0,
+      inquiryCounts: { total: 0, PENDING: 0, READ: 0, REPLIED: 0 },
+      caseCount: 0,
+      newsCount: 0,
+    };
+  }
+}
 
 export default async function AdminDashboard() {
   const session = await requireAdminSession({ redirectToLogin: true });
+  const { productCount, inquiryCounts, caseCount, newsCount } = await getDashboardStats();
 
   const stats = [
-    { label: '在线产品', value: '动态目录', icon: Package, color: 'text-bmw-blue', bg: 'bg-bmw-blue/10' },
-    { label: '询盘中心', value: '待跟进', icon: MessageSquare, color: 'text-bmw-red', bg: 'bg-bmw-red/10' },
-    { label: '内容更新', value: '多语言', icon: TrendingUp, color: 'text-green-500', bg: 'bg-green-500/10' },
-    { label: '后台用户', value: 'ADMIN', icon: Users, color: 'text-purple-500', bg: 'bg-purple-500/10' },
+    { label: '在线产品', value: String(productCount), icon: Package, color: 'text-bmw-blue', bg: 'bg-bmw-blue/10' },
+    { label: '待处理询盘', value: String(inquiryCounts.PENDING), icon: MessageSquare, color: 'text-bmw-red', bg: 'bg-bmw-red/10', badge: inquiryCounts.PENDING > 0 },
+    { label: '工程案例', value: String(caseCount), icon: FileText, color: 'text-green-500', bg: 'bg-green-500/10' },
+    { label: '新闻动态', value: String(newsCount), icon: Newspaper, color: 'text-purple-500', bg: 'bg-purple-500/10' },
   ];
 
   const quickActions = [
@@ -39,9 +71,15 @@ export default async function AdminDashboard() {
               <div className={`p-3 ${stat.bg} ${stat.color}`}>
                 <stat.icon className="w-5 h-5" />
               </div>
-              <span className="text-[10px] font-bold text-green-500 flex items-center">
-                Live <ArrowUpRight className="w-3 h-3 ml-1" />
-              </span>
+              {'badge' in stat && stat.badge ? (
+                <span className="text-[10px] font-bold text-bmw-red flex items-center">
+                  NEW <ArrowUpRight className="w-3 h-3 ml-1" />
+                </span>
+              ) : (
+                <span className="text-[10px] font-bold text-green-500 flex items-center">
+                  Live <ArrowUpRight className="w-3 h-3 ml-1" />
+                </span>
+              )}
             </div>
             <div className="text-2xl font-black text-bmw-black">{stat.value}</div>
             <div className="text-xs font-bold text-bmw-silver uppercase tracking-widest mt-1">{stat.label}</div>
@@ -77,32 +115,47 @@ export default async function AdminDashboard() {
         </div>
 
         <div className="space-y-8">
-          <div className="bg-bmw-black p-8 text-white">
-            <h3 className="text-xs font-bold text-bmw-blue tracking-[0.2em] uppercase mb-6">下一步建议</h3>
-            <div className="space-y-4 text-sm text-bmw-silver leading-relaxed">
-              <p>1. 校对旧产品分类并保存为新的专业分类结构。</p>
-              <p>2. 确认上传资源在生产环境中的持久化策略。</p>
-              <p>3. 整理 Vercel、数据库、认证、SMTP 等生产环境变量。</p>
+          <div className="bg-white border border-gray-200 p-8 shadow-sm">
+            <h3 className="text-xs font-bold text-bmw-black tracking-[0.2em] uppercase mb-6">询盘状态概览</h3>
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <span className="text-xs text-gray-500">总询盘</span>
+                <div className="text-sm font-bold text-bmw-black">{inquiryCounts.total}</div>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-xs text-gray-500">待处理</span>
+                <div className={`text-sm font-bold ${inquiryCounts.PENDING > 0 ? 'text-bmw-red' : 'text-gray-400'}`}>
+                  {inquiryCounts.PENDING}
+                </div>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-xs text-gray-500">已读</span>
+                <div className="text-sm font-bold text-bmw-blue">{inquiryCounts.READ}</div>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-xs text-gray-500">已回复</span>
+                <div className="text-sm font-bold text-green-500">{inquiryCounts.REPLIED}</div>
+              </div>
             </div>
           </div>
 
-          <div className="bg-white border border-gray-200 p-8 shadow-sm">
-            <h3 className="text-xs font-bold text-bmw-black tracking-[0.2em] uppercase mb-6">系统状态</h3>
-            <div className="space-y-6">
+          <div className="bg-bmw-black p-8 text-white">
+            <h3 className="text-xs font-bold text-bmw-blue tracking-[0.2em] uppercase mb-6">系统状态</h3>
+            <div className="space-y-4 text-sm text-bmw-silver leading-relaxed">
               <div className="flex justify-between items-center">
-                <span className="text-xs text-gray-500">PostgreSQL 数据库</span>
+                <span>PostgreSQL 数据库</span>
                 <div className="flex items-center text-[10px] font-bold text-green-500 uppercase">
                   <div className="w-1.5 h-1.5 rounded-full bg-green-500 mr-2" /> 已接入
                 </div>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-xs text-gray-500">后台权限保护</span>
+                <span>后台权限保护</span>
                 <div className="flex items-center text-[10px] font-bold text-green-500 uppercase">
                   <div className="w-1.5 h-1.5 rounded-full bg-green-500 mr-2" /> 已启用
                 </div>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-xs text-gray-500">多语言内容</span>
+                <span>多语言内容</span>
                 <div className="flex items-center text-[10px] font-bold text-green-500 uppercase">
                   <div className="w-1.5 h-1.5 rounded-full bg-green-500 mr-2" /> 运行中
                 </div>

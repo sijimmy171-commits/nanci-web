@@ -102,6 +102,8 @@ async function saveToSupabaseStorage(file: File, safeFolder: string, filename: s
   return `${storage.supabaseUrl}/storage/v1/object/public/${encodeURIComponent(storage.bucket)}/${encodedPath}`;
 }
 
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
+
 export async function saveUploadedFile({
   file,
   folder,
@@ -110,6 +112,10 @@ export async function saveUploadedFile({
 }: SaveUploadedFileOptions) {
   if (!file || file.size === 0) {
     return fallbackUrl;
+  }
+
+  if (file.size > MAX_FILE_SIZE) {
+    throw new Error(`File size (${(file.size / 1024 / 1024).toFixed(1)} MB) exceeds the 10 MB limit.`);
   }
 
   const ext = getExtension(file.name);
