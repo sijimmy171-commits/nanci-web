@@ -5,11 +5,24 @@ import { getSiteConfig } from '@/lib/site-config';
 import { getSiteContentOverrides } from '@/lib/site-content-overrides';
 import { updateSiteConfig } from './actions';
 
-function TextareaField({ label, name, defaultValue, rows = 3 }: { label: string; name: string; defaultValue?: string; rows?: number }) {
+function TextareaField({
+  label,
+  name,
+  defaultValue,
+  rows = 3,
+  hint,
+}: {
+  label: string;
+  name: string;
+  defaultValue?: string;
+  rows?: number;
+  hint?: string;
+}) {
   return (
     <div className="space-y-2">
       <label className="text-xs font-bold text-bmw-black uppercase">{label}</label>
       <textarea name={name} rows={rows} defaultValue={defaultValue} className="w-full bg-bmw-lightgray border border-gray-200 p-4 text-sm focus:outline-none focus:border-bmw-blue transition-all" />
+      {hint && <p className="text-xs text-gray-400 leading-relaxed">{hint}</p>}
     </div>
   );
 }
@@ -77,6 +90,20 @@ export default async function SettingsPage({
                 <label className="text-xs font-bold text-bmw-black uppercase">联系电话</label>
                 <input type="text" name="contactPhone" defaultValue={config?.contactPhone ?? ''} className="w-full bg-bmw-lightgray border border-gray-200 p-4 text-sm focus:outline-none focus:border-bmw-blue transition-all" />
               </div>
+              <TextareaField
+                label="联系地址（中文）"
+                name="contactHqAddressZh"
+                defaultValue={overrides.contact.hqAddress.zh}
+                rows={3}
+                hint="显示在前台“联系我们”页面左侧的联系地址信息。"
+              />
+              <TextareaField
+                label="联系地址（英文）"
+                name="contactHqAddressEn"
+                defaultValue={overrides.contact.hqAddress.en}
+                rows={3}
+                hint="显示在英文 Contact 页面左侧的 Contact Address 信息。"
+              />
               <div className="space-y-2">
                 <label className="text-xs font-bold text-bmw-black uppercase">WhatsApp (国际版)</label>
                 <input type="text" name="whatsappNumber" defaultValue={config?.whatsappNumber || ''} placeholder="+86 138..." className="w-full bg-bmw-lightgray border border-gray-200 p-4 text-sm focus:outline-none focus:border-bmw-blue transition-all" />
@@ -102,32 +129,31 @@ export default async function SettingsPage({
 
             <div className="space-y-6">
               <h3 className="text-[10px] font-black text-bmw-silver uppercase tracking-[0.3em] border-b border-gray-100 pb-2">扩展公共文案（中英主版本）</h3>
-              <TextareaField label="页脚品牌说明（中文）" name="footerBrandDescriptionZh" defaultValue={overrides.footer.brandDescription.zh} rows={4} />
-              <TextareaField label="页脚品牌说明（英文）" name="footerBrandDescriptionEn" defaultValue={overrides.footer.brandDescription.en} rows={4} />
-              <TextareaField label="产品页主标题（中文）" name="productsTitleZh" defaultValue={overrides.products.title.zh} rows={2} />
-              <TextareaField label="产品页主标题（英文）" name="productsTitleEn" defaultValue={overrides.products.title.en} rows={2} />
-              <TextareaField label="产品页说明（中文）" name="productsDescriptionZh" defaultValue={overrides.products.description.zh} rows={4} />
-              <TextareaField label="产品页说明（英文）" name="productsDescriptionEn" defaultValue={overrides.products.description.en} rows={4} />
-              <TextareaField label="产品页 CTA 标题（中文）" name="productsSupportTitleZh" defaultValue={overrides.products.supportTitle.zh} rows={3} />
-              <TextareaField label="产品页 CTA 标题（英文）" name="productsSupportTitleEn" defaultValue={overrides.products.supportTitle.en} rows={3} />
-              <TextareaField label="产品页 CTA 按钮（中文）" name="productsSupportCtaZh" defaultValue={overrides.products.supportCta.zh} rows={2} />
-              <TextareaField label="产品页 CTA 按钮（英文）" name="productsSupportCtaEn" defaultValue={overrides.products.supportCta.en} rows={2} />
-              <TextareaField label="产品详情报价按钮（中文）" name="productsDetailQuoteCtaZh" defaultValue={overrides.products.detailQuoteCta.zh} rows={2} />
-              <TextareaField label="产品详情报价按钮（英文）" name="productsDetailQuoteCtaEn" defaultValue={overrides.products.detailQuoteCta.en} rows={2} />
-              <TextareaField label="产品详情 PDF 按钮（中文）" name="productsDetailPdfCtaZh" defaultValue={overrides.products.detailPdfCta.zh} rows={2} />
-              <TextareaField label="产品详情 PDF 按钮（英文）" name="productsDetailPdfCtaEn" defaultValue={overrides.products.detailPdfCta.en} rows={2} />
-              <TextareaField label="联系页标题（中文）" name="contactTitleZh" defaultValue={overrides.contact.title.zh} rows={3} />
-              <TextareaField label="联系页标题（英文）" name="contactTitleEn" defaultValue={overrides.contact.title.en} rows={3} />
-              <TextareaField label="联系页说明（中文）" name="contactDescriptionZh" defaultValue={overrides.contact.description.zh} rows={4} />
-              <TextareaField label="联系页说明（英文）" name="contactDescriptionEn" defaultValue={overrides.contact.description.en} rows={4} />
-              <TextareaField label="联系页表单标题（中文）" name="contactFormTitleZh" defaultValue={overrides.contact.formTitle.zh} rows={2} />
-              <TextareaField label="联系页表单标题（英文）" name="contactFormTitleEn" defaultValue={overrides.contact.formTitle.en} rows={2} />
-              <TextareaField label="WhatsApp 提示标题（中文）" name="contactWhatsappTitleZh" defaultValue={overrides.contact.whatsappTitle.zh} rows={2} />
-              <TextareaField label="WhatsApp 提示标题（英文）" name="contactWhatsappTitleEn" defaultValue={overrides.contact.whatsappTitle.en} rows={2} />
-              <TextareaField label="联系页地址（中文）" name="contactHqAddressZh" defaultValue={overrides.contact.hqAddress.zh} rows={3} />
-              <TextareaField label="联系页地址（英文）" name="contactHqAddressEn" defaultValue={overrides.contact.hqAddress.en} rows={3} />
-              <TextareaField label="表单详细需求占位文案（中文）" name="contactFormMessagePlaceholderZh" defaultValue={overrides.contact.formMessagePlaceholder.zh} rows={3} />
-              <TextareaField label="表单详细需求占位文案（英文）" name="contactFormMessagePlaceholderEn" defaultValue={overrides.contact.formMessagePlaceholder.en} rows={3} />
+              <p className="text-xs text-gray-500 leading-relaxed">这些字段分别控制页脚、产品中心、产品详情页和联系我们页面的固定文案；每个输入框下方标明了前台显示位置。</p>
+              <TextareaField label="页脚品牌说明（中文）" name="footerBrandDescriptionZh" defaultValue={overrides.footer.brandDescription.zh} rows={4} hint="显示在全站页脚左侧 SUCI 标识下方。" />
+              <TextareaField label="页脚品牌说明（英文）" name="footerBrandDescriptionEn" defaultValue={overrides.footer.brandDescription.en} rows={4} hint="显示在英文站全站页脚左侧 SUCI 标识下方。" />
+              <TextareaField label="产品页主标题（中文）" name="productsTitleZh" defaultValue={overrides.products.title.zh} rows={2} hint="显示在“产品中心”页面顶部黑色横幅的大标题。" />
+              <TextareaField label="产品页主标题（英文）" name="productsTitleEn" defaultValue={overrides.products.title.en} rows={2} hint="显示在英文 Products 页面顶部黑色横幅的大标题。" />
+              <TextareaField label="产品页说明（中文）" name="productsDescriptionZh" defaultValue={overrides.products.description.zh} rows={4} hint="显示在“产品中心”页面顶部主标题下方的说明文字。" />
+              <TextareaField label="产品页说明（英文）" name="productsDescriptionEn" defaultValue={overrides.products.description.en} rows={4} hint="显示在英文 Products 页面顶部主标题下方的说明文字。" />
+              <TextareaField label="产品页 CTA 标题（中文）" name="productsSupportTitleZh" defaultValue={overrides.products.supportTitle.zh} rows={3} hint="显示在“产品中心”页面底部黑色咨询区的标题。" />
+              <TextareaField label="产品页 CTA 标题（英文）" name="productsSupportTitleEn" defaultValue={overrides.products.supportTitle.en} rows={3} hint="显示在英文 Products 页面底部黑色咨询区的标题。" />
+              <TextareaField label="产品页 CTA 按钮（中文）" name="productsSupportCtaZh" defaultValue={overrides.products.supportCta.zh} rows={2} hint="显示在“产品中心”页面底部黑色咨询区的按钮文字。" />
+              <TextareaField label="产品页 CTA 按钮（英文）" name="productsSupportCtaEn" defaultValue={overrides.products.supportCta.en} rows={2} hint="显示在英文 Products 页面底部黑色咨询区的按钮文字。" />
+              <TextareaField label="产品详情报价按钮（中文）" name="productsDetailQuoteCtaZh" defaultValue={overrides.products.detailQuoteCta.zh} rows={2} hint="显示在单个产品详情页底部的询价按钮。" />
+              <TextareaField label="产品详情报价按钮（英文）" name="productsDetailQuoteCtaEn" defaultValue={overrides.products.detailQuoteCta.en} rows={2} hint="显示在英文单个产品详情页底部的询价按钮。" />
+              <TextareaField label="产品详情 PDF 按钮（中文）" name="productsDetailPdfCtaZh" defaultValue={overrides.products.detailPdfCta.zh} rows={2} hint="预留给产品详情页 PDF 下载按钮文案；当前前台详情页暂未显示这个按钮。" />
+              <TextareaField label="产品详情 PDF 按钮（英文）" name="productsDetailPdfCtaEn" defaultValue={overrides.products.detailPdfCta.en} rows={2} hint="预留给英文产品详情页 PDF 下载按钮文案；当前前台详情页暂未显示这个按钮。" />
+              <TextareaField label="联系页标题（中文）" name="contactTitleZh" defaultValue={overrides.contact.title.zh} rows={3} hint="显示在“联系我们”页面顶部的大标题。" />
+              <TextareaField label="联系页标题（英文）" name="contactTitleEn" defaultValue={overrides.contact.title.en} rows={3} hint="显示在英文 Contact 页面顶部的大标题。" />
+              <TextareaField label="联系页说明（中文）" name="contactDescriptionZh" defaultValue={overrides.contact.description.zh} rows={4} hint="显示在“联系我们”页面顶部标题下方的说明文字。" />
+              <TextareaField label="联系页说明（英文）" name="contactDescriptionEn" defaultValue={overrides.contact.description.en} rows={4} hint="显示在英文 Contact 页面顶部标题下方的说明文字。" />
+              <TextareaField label="联系页表单标题（中文）" name="contactFormTitleZh" defaultValue={overrides.contact.formTitle.zh} rows={2} hint="显示在“联系我们”页面右侧询盘表单上方。" />
+              <TextareaField label="联系页表单标题（英文）" name="contactFormTitleEn" defaultValue={overrides.contact.formTitle.en} rows={2} hint="显示在英文 Contact 页面右侧询盘表单上方。" />
+              <TextareaField label="WhatsApp 提示标题（中文）" name="contactWhatsappTitleZh" defaultValue={overrides.contact.whatsappTitle.zh} rows={2} hint="显示在“联系我们”页面左侧 WhatsApp 号码上方。" />
+              <TextareaField label="WhatsApp 提示标题（英文）" name="contactWhatsappTitleEn" defaultValue={overrides.contact.whatsappTitle.en} rows={2} hint="显示在英文 Contact 页面左侧 WhatsApp 号码上方。" />
+              <TextareaField label="表单详细需求占位文案（中文）" name="contactFormMessagePlaceholderZh" defaultValue={overrides.contact.formMessagePlaceholder.zh} rows={3} hint="显示在“联系我们”页面询盘表单的详细需求输入框内。" />
+              <TextareaField label="表单详细需求占位文案（英文）" name="contactFormMessagePlaceholderEn" defaultValue={overrides.contact.formMessagePlaceholder.en} rows={3} hint="显示在英文 Contact 页面询盘表单的详细需求输入框内。" />
             </div>
           </div>
 
