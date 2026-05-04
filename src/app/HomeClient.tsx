@@ -2,11 +2,11 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 import { getLocalizedPath, type Locale } from '@/lib/i18n';
 import type { SiteDictionary } from '@/lib/site-content';
+import ContactForm from './contact/ContactForm';
 
 type FeaturedProduct = {
   id: string;
@@ -24,6 +24,7 @@ interface HomeClientProps {
 export default function HomeClient({ locale, dictionary, products }: HomeClientProps) {
   const home = dictionary.home;
   const [currentSlide, setCurrentSlide] = useState(0);
+  const heroBackgroundUrl = '/home-hero-power-lines.png';
 
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -39,7 +40,7 @@ export default function HomeClient({ locale, dictionary, products }: HomeClientP
     <div className="w-full bg-white text-bmw-darkgray">
       <section className="relative h-screen min-h-[800px] flex items-center justify-center overflow-hidden bg-bmw-black">
         <div className="absolute inset-0 z-0 text-white/5">
-          <div className="absolute inset-0 opacity-40 mix-blend-overlay bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]" />
+          <div className="absolute inset-0 bg-cover bg-center opacity-80" style={{ backgroundImage: `url(${heroBackgroundUrl})` }} />
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-bmw-graphite/80 via-bmw-black to-bmw-black opacity-80" />
         </div>
 
@@ -130,7 +131,8 @@ export default function HomeClient({ locale, dictionary, products }: HomeClientP
               <Link key={product.id} href={getLocalizedPath(locale, `/products/${product.id}`)} className="group relative bg-bmw-lightgray border border-gray-200 overflow-hidden hover:shadow-xl transition-all">
                 <div className="relative aspect-[4/3] bg-gray-200 overflow-hidden">
                   {product.imageUrl ? (
-                    <Image src={product.imageUrl} alt={product.name} fill className="object-cover transition-transform duration-500 group-hover:scale-105" />
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={product.imageUrl} alt={product.name} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
                   ) : (
                     <div className="w-full h-full bg-[linear-gradient(135deg,#dbe4ee,#f8fafc)]" />
                   )}
@@ -141,6 +143,18 @@ export default function HomeClient({ locale, dictionary, products }: HomeClientP
                 </div>
               </Link>
             ))}
+          </div>
+
+          <div className="mt-20 grid grid-cols-1 lg:grid-cols-[0.8fr_1.2fr] gap-12 border-t border-gray-200 pt-16">
+            <div>
+              <p className="text-xs font-bold text-bmw-blue tracking-[0.3em] uppercase mb-4">{home.bottomCtaEyebrow}</p>
+              <h3 className="text-3xl md:text-4xl font-light tracking-wide text-bmw-black mb-6">{home.bottomCtaTitle}</h3>
+              <p className="text-gray-500 font-light leading-8">{home.bottomCtaDescription}</p>
+            </div>
+            <div className="bg-white">
+              <h4 className="text-2xl font-light mb-8 text-bmw-black">{dictionary.contact.formTitle}</h4>
+              <ContactForm locale={locale} dictionary={dictionary} />
+            </div>
           </div>
         </div>
       </section>

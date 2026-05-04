@@ -1,5 +1,4 @@
 import React from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { Download } from 'lucide-react';
@@ -89,7 +88,8 @@ export default async function LocalizedAboutPage({ params }: { params: Promise<{
               <article key={`${report.date}-${report.title}`} className="border border-gray-200 bg-white overflow-hidden">
                 <div className="relative aspect-[4/5] bg-bmw-lightgray">
                   {report.imageUrl ? (
-                    <Image src={report.imageUrl} alt={report.title} fill className="object-cover" />
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={report.imageUrl} alt={report.title} className="h-full w-full object-cover" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-xs uppercase tracking-[0.3em] text-gray-400">Report Cover</div>
                   )}

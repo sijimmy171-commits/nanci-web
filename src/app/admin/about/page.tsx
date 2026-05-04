@@ -1,5 +1,4 @@
 import React from 'react';
-import Image from 'next/image';
 import { Info, Save } from 'lucide-react';
 import { requireAdminSession } from '@/lib/admin-auth';
 import { getAboutContent } from '@/lib/about-content';
@@ -167,7 +166,8 @@ export default async function AdminAboutPage({
                       <label className="text-xs font-bold text-bmw-black uppercase">封面图片</label>
                       <div className="relative aspect-[4/5] border border-gray-200 bg-white overflow-hidden">
                         {report.imageUrl ? (
-                          <Image src={report.imageUrl} alt={report.title.zh || report.title.en || `Report ${index + 1}`} fill className="object-cover" />
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={report.imageUrl} alt={report.title.zh || report.title.en || `Report ${index + 1}`} className="h-full w-full object-cover" />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-xs uppercase tracking-widest text-gray-400">No Image</div>
                         )}

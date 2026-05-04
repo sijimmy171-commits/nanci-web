@@ -31,7 +31,6 @@ export async function GET() {
     entries.push({ loc: `${BASE_URL}/${locale}`, lastmod: now, changefreq: 'weekly', priority: 1.0 });
     entries.push({ loc: `${BASE_URL}/${locale}/about`, lastmod: now, changefreq: 'monthly', priority: 0.8 });
     entries.push({ loc: `${BASE_URL}/${locale}/products`, lastmod: now, changefreq: 'weekly', priority: 0.9 });
-    entries.push({ loc: `${BASE_URL}/${locale}/cases`, lastmod: now, changefreq: 'monthly', priority: 0.7 });
     entries.push({ loc: `${BASE_URL}/${locale}/news`, lastmod: now, changefreq: 'weekly', priority: 0.7 });
     entries.push({ loc: `${BASE_URL}/${locale}/contact`, lastmod: now, changefreq: 'monthly', priority: 0.6 });
   }
@@ -51,23 +50,6 @@ export async function GET() {
     }
   } catch (error) {
     console.error('Sitemap: failed to load products', error);
-  }
-
-  // Dynamic case study pages
-  try {
-    const cases = await listEditorialRecords('case-study', true);
-    for (const item of cases) {
-      for (const locale of publishedLocales) {
-        entries.push({
-          loc: `${BASE_URL}/${locale}/cases/${encodeURIComponent(item.slug)}`,
-          lastmod: item.updatedAt.toISOString().split('T')[0],
-          changefreq: 'monthly',
-          priority: 0.6,
-        });
-      }
-    }
-  } catch (error) {
-    console.error('Sitemap: failed to load case studies', error);
   }
 
   // Dynamic news pages

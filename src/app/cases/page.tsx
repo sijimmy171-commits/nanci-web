@@ -1,6 +1,5 @@
-import { redirect } from 'next/navigation';
-import { defaultLocale } from '@/lib/i18n';
+import { notFound } from 'next/navigation';
 
-export default function CasesRedirectPage() {
-  redirect(`/${defaultLocale}/cases`);
+export default function CasesPage() {
+  notFound();
 }

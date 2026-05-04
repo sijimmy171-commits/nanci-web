@@ -85,17 +85,6 @@ export type SiteDictionary = {
     reportsLabel: string;
     partnersLabel: string;
   };
-  cases: {
-    eyebrow: string;
-    title: string;
-    description: string;
-    emptyState: string;
-    readMore: string;
-    back: string;
-    categoryLabel: string;
-    regionLabel: string;
-    productLabel: string;
-  };
   news: {
     eyebrow: string;
     title: string;
@@ -195,7 +184,6 @@ const zh: SiteDictionary = {
           { id: '/about#culture', label: '企业文化' },
         ],
       },
-      { id: '/cases', label: '工程案例' },
       { id: '/news', label: '新闻动态' },
       {
         id: '/products',
@@ -231,15 +219,6 @@ const zh: SiteDictionary = {
         primaryCta: '探索全系产品',
         secondaryCta: '联系我们',
         primaryHref: '/products',
-        secondaryHref: '/contact',
-      },
-      {
-        eyebrow: 'ENGINEERING / DELIVERY',
-        title: '稳定制造\n支撑全球项目',
-        subtitle: '围绕输配电、新能源与工业基础设施项目，我们提供从选型到交付的一体化协同支持。',
-        primaryCta: '查看工程案例',
-        secondaryCta: '联系销售团队',
-        primaryHref: '/cases',
         secondaryHref: '/contact',
       },
       {
@@ -297,17 +276,6 @@ const zh: SiteDictionary = {
     timelineLabel: '发展历程',
     reportsLabel: '检测报告',
     partnersLabel: '合作伙伴',
-  },
-  cases: {
-    eyebrow: '工程案例',
-    title: '项目现场与交付成果',
-    description: '我们围绕输配电、新能源与工业基础设施场景，为客户提供可落地的产品支持、项目配套与交付协同。',
-    emptyState: '案例内容正在整理中，欢迎联系我们了解更多项目经验。',
-    readMore: '查看案例详情',
-    back: '返回案例列表',
-    categoryLabel: '案例分类',
-    regionLabel: '项目地区',
-    productLabel: '关联产品',
   },
   news: {
     eyebrow: '新闻动态',
@@ -413,7 +381,6 @@ const en: SiteDictionary = {
           { id: '/about#culture', label: 'Culture' },
         ],
       },
-      { id: '/cases', label: 'Case Studies' },
       { id: '/news', label: 'News' },
       {
         id: '/products',
@@ -449,15 +416,6 @@ const en: SiteDictionary = {
         primaryCta: 'Explore Products',
         secondaryCta: 'Contact Us',
         primaryHref: '/products',
-        secondaryHref: '/contact',
-      },
-      {
-        eyebrow: 'ENGINEERING / DELIVERY',
-        title: 'Reliable Manufacturing\nFor Global Projects',
-        subtitle: 'We support transmission, renewable energy, and industrial infrastructure programs with practical coordination from selection to delivery.',
-        primaryCta: 'View Case Studies',
-        secondaryCta: 'Talk to Sales',
-        primaryHref: '/cases',
         secondaryHref: '/contact',
       },
       {
@@ -515,17 +473,6 @@ const en: SiteDictionary = {
     timelineLabel: 'Milestones',
     reportsLabel: 'Testing Reports',
     partnersLabel: 'Partners',
-  },
-  cases: {
-    eyebrow: 'Case Studies',
-    title: 'Project Delivery and Application Experience',
-    description: 'We support transmission, renewable energy, and industrial infrastructure customers with practical products, project coordination, and dependable delivery execution.',
-    emptyState: 'Case study content is being prepared. Contact us if you would like to review relevant project experience.',
-    readMore: 'View Case Study',
-    back: 'Back to Case Studies',
-    categoryLabel: 'Category',
-    regionLabel: 'Region',
-    productLabel: 'Related Product',
   },
   news: {
     eyebrow: 'News',

@@ -2,7 +2,6 @@ export const NAV_LINKS = [
   { id: '/', label: '首页' },
   { id: '/about', label: '关于我们', sub: ['公司简介', '发展历程', '资质荣誉', '企业文化'] },
   { id: '/products', label: '产品中心', sub: ['绝缘子系列', '避雷器系列', '开关设备系列', '配套组件系列'] },
-  { id: '/cases', label: '工程案例' },
   { id: '/news', label: '新闻资讯' },
   { id: '/contact', label: '联系我们' }
 ];
@@ -18,14 +17,6 @@ export const PRODUCTS_DATA = [
   { id: 'p8', category: '配套组件系列', name: '防雷金具', model: 'FL-01', desc: '高强度合金制造，配合绝缘子和避雷器使用，保障线路安全。', specs: ['高强度', '防腐蚀', '易安装'] },
 ];
 
-export const CASES_DATA = [
-  { id: 'c1', title: '国家电网某省特高压工程', location: '河南', category: '电网工程', product: '绝缘子', desc: '为该特高压直流输电工程提供全套支柱复合绝缘子，保障跨区电力外送。' },
-  { id: 'c2', title: '南方电网配电网升级项目', location: '广东', category: '配电工程', product: '配电设备', desc: '参与粤港澳大湾区智能电网建设，提供高可靠性环保型环网柜。' },
-  { id: 'c3', title: '中东某国输电线路工程', location: '沙特阿拉伯', category: '海外项目', product: '避雷器', desc: '克服极端高温和沙漠环境，定制防风沙型高压避雷器。' },
-  { id: 'c4', title: '东南亚城市轨道交通项目', location: '泰国', category: '轨道交通', product: '开关设备', desc: '为曼谷城市轨道交通提供稳定可靠的牵引供电开关设备。' },
-  { id: 'c5', title: '非洲某国电力基础设施', location: '肯尼亚', category: '海外项目', product: '绝缘子', desc: '助力"一带一路"建设，提供高性价比的线路复合绝缘子。' },
-  { id: 'c6', title: '欧洲风电场配套工程', location: '德国', category: '新能源', product: '配套组件', desc: '为海上风电场提供防腐蚀定制金具及绝缘配套产品。' }
-];
 
 export const NEWS_DATA = [
   { id: 'n1', title: '公司荣获2025年度国家科技进步奖', date: '2025-12-15', category: '公司动态', desc: '凭借在特高压绝缘材料领域的重大技术突破，我司主导的研发项目荣获国家科技进步二等奖。', tags: ['获奖', '研发'] },
