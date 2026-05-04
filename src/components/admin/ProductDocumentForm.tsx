@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useActionState } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
-import { useFormStatus } from 'react-dom';
+import { useRouter } from 'next/navigation';
 import { ArrowLeft, FileText, Save } from 'lucide-react';
-import type { ProductDocumentFormState } from '@/app/admin/product-documents/actions';
+import { createProductDocumentUploadTargetAction, type ProductDocumentFormState } from '@/app/admin/product-documents/actions';
 import type { LocalizedProductDocumentRecord } from '@/lib/product-documents';
 
 type Props = {
@@ -68,9 +68,7 @@ function TextareaField({
   );
 }
 
-function SubmitButton({ mode }: { mode: 'create' | 'edit' }) {
-  const { pending } = useFormStatus();
-
+function SubmitButton({ mode, pending }: { mode: 'create' | 'edit'; pending: boolean }) {
   return (
     <button
       type="submit"
@@ -84,7 +82,74 @@ function SubmitButton({ mode }: { mode: 'create' | 'edit' }) {
 }
 
 export default function ProductDocumentForm({ mode, action, initial, translationReady }: Props) {
-  const [state, formAction] = useActionState(action, { error: null });
+  const router = useRouter();
+  const [error, setError] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
+
+  async function uploadFileDirectly(file: File) {
+    const target = await createProductDocumentUploadTargetAction({
+      filename: file.name,
+      contentType: file.type,
+      size: file.size,
+    });
+
+    const uploadBody = new FormData();
+    uploadBody.append('cacheControl', '31536000');
+    uploadBody.append('', file);
+
+    const response = await fetch(target.signedUrl, {
+      method: 'PUT',
+      headers: {
+        'x-upsert': 'false',
+      },
+      body: uploadBody,
+    });
+
+    if (!response.ok) {
+      const details = await response.text().catch(() => '');
+      throw new Error(`Supabase upload failed (${response.status}): ${details || response.statusText}`);
+    }
+
+    return target.fileUrl;
+  }
+
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = event.currentTarget;
+
+    if (!form.reportValidity()) {
+      return;
+    }
+
+    setPending(true);
+    setError(null);
+
+    try {
+      const formData = new FormData(form);
+      const file = formData.get('file');
+
+      if (file instanceof File && file.size > 0) {
+        const fileUrl = await uploadFileDirectly(file);
+        formData.delete('file');
+        formData.set('fileUrl', fileUrl);
+      } else if (mode === 'create') {
+        throw new Error('请上传 PDF 文件。');
+      }
+
+      const result = await action({ error: null }, formData);
+      if (result.error) {
+        setError(result.error);
+        return;
+      }
+
+      router.push('/admin/product-documents');
+      router.refresh();
+    } catch (submissionError) {
+      setError(submissionError instanceof Error ? submissionError.message : '保存失败，请检查资料内容后重试。');
+    } finally {
+      setPending(false);
+    }
+  }
 
   return (
     <div className="space-y-8">
@@ -99,7 +164,7 @@ export default function ProductDocumentForm({ mode, action, initial, translation
       </div>
 
       <div className="bg-white border border-gray-200 shadow-sm">
-        <form action={formAction} className="p-8 space-y-8">
+        <form onSubmit={handleSubmit} className="p-8 space-y-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
             <div className="space-y-6">
               <div className="flex items-center space-x-2 text-bmw-blue mb-2">
@@ -155,14 +220,14 @@ export default function ProductDocumentForm({ mode, action, initial, translation
             </label>
           </div>
 
-          {state.error && (
+          {error && (
             <div className="border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700" role="alert" aria-live="polite">
-              {state.error}
+              {error}
             </div>
           )}
 
           <div className="pt-8 border-t border-gray-100 flex justify-end">
-            <SubmitButton mode={mode} />
+            <SubmitButton mode={mode} pending={pending} />
           </div>
         </form>
       </div>

@@ -12,11 +12,18 @@ import {
   updateProductDocument,
 } from '@/lib/product-documents';
 import { autoTranslateLocalizedFields } from '@/lib/translation';
-import { saveUploadedFile } from '@/lib/uploads';
+import { createSignedUploadTarget, saveUploadedFile } from '@/lib/uploads';
 import { requireAdminSession } from '@/lib/admin-auth';
 
 export type ProductDocumentFormState = {
   error: string | null;
+  success?: boolean;
+};
+
+export type ProductDocumentUploadInput = {
+  filename: string;
+  contentType: string;
+  size: number;
 };
 
 function buildTranslations(formData: FormData, existing?: Awaited<ReturnType<typeof getProductDocumentById>>) {
@@ -73,12 +80,17 @@ function getActionErrorMessage(error: unknown) {
 async function createProductDocumentMutation(formData: FormData) {
   await requireAdminSession();
 
-  const file = formData.get('file');
-  const fileUrl = await saveUploadedFile({
-    file: file instanceof File ? file : null,
-    folder: 'product-documents',
-    allowedExtensions: ['.pdf'],
-  });
+  const providedFileUrl = formData.get('fileUrl');
+  let fileUrl = typeof providedFileUrl === 'string' ? providedFileUrl : '';
+
+  if (!fileUrl) {
+    const file = formData.get('file');
+    fileUrl = await saveUploadedFile({
+      file: file instanceof File ? file : null,
+      folder: 'product-documents',
+      allowedExtensions: ['.pdf'],
+    }) || '';
+  }
 
   if (!fileUrl) {
     throw new Error('Please upload a PDF file.');
@@ -117,7 +129,7 @@ export async function createProductDocumentFormAction(
     return { error: getActionErrorMessage(error) };
   }
 
-  redirect('/admin/product-documents');
+  return { error: null, success: true };
 }
 
 async function updateProductDocumentMutation(documentId: string, formData: FormData) {
@@ -128,13 +140,18 @@ async function updateProductDocumentMutation(documentId: string, formData: FormD
     throw new Error('Product document does not exist.');
   }
 
-  const file = formData.get('file');
-  const fileUrl = await saveUploadedFile({
-    file: file instanceof File ? file : null,
-    folder: 'product-documents',
-    allowedExtensions: ['.pdf'],
-    fallbackUrl: existing.fileUrl,
-  });
+  const providedFileUrl = formData.get('fileUrl');
+  let fileUrl = typeof providedFileUrl === 'string' ? providedFileUrl : '';
+
+  if (!fileUrl) {
+    const file = formData.get('file');
+    fileUrl = await saveUploadedFile({
+      file: file instanceof File ? file : null,
+      folder: 'product-documents',
+      allowedExtensions: ['.pdf'],
+      fallbackUrl: existing.fileUrl,
+    }) || '';
+  }
 
   let translations = buildTranslations(formData, existing);
   translations = await maybeTranslate(translations, formData.get('autoTranslate') === 'on');
@@ -170,7 +187,19 @@ export async function updateProductDocumentFormAction(
     return { error: getActionErrorMessage(error) };
   }
 
-  redirect('/admin/product-documents');
+  return { error: null, success: true };
+}
+
+export async function createProductDocumentUploadTargetAction(input: ProductDocumentUploadInput) {
+  await requireAdminSession();
+
+  return createSignedUploadTarget({
+    filename: input.filename,
+    contentType: input.contentType,
+    size: input.size,
+    folder: 'product-documents',
+    allowedExtensions: ['.pdf'],
+  });
 }
 
 export async function deleteProductDocumentAction(documentId: string) {
