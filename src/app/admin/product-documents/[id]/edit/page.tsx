@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import ProductDocumentForm from '@/components/admin/ProductDocumentForm';
 import { requireAdminSession } from '@/lib/admin-auth';
 import { getProductDocumentById } from '@/lib/product-documents';
-import { updateProductDocumentAction } from '../../actions';
+import { updateProductDocumentFormAction } from '../../actions';
 
 export default async function EditProductDocumentPage({ params }: { params: Promise<{ id: string }> }) {
   await requireAdminSession({ redirectToLogin: true });
@@ -12,6 +12,6 @@ export default async function EditProductDocumentPage({ params }: { params: Prom
   const document = await getProductDocumentById(id);
   if (!document) notFound();
 
-  const action = updateProductDocumentAction.bind(null, id);
-  return <ProductDocumentForm mode="edit" action={action} initial={document} />;
+  const action = updateProductDocumentFormAction.bind(null, id);
+  return <ProductDocumentForm mode="edit" action={action} initial={document} translationReady={Boolean(process.env.OPENAI_API_KEY)} />;
 }

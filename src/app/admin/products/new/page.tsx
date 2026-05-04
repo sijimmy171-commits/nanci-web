@@ -23,7 +23,7 @@ export default async function NewProductPage() {
       </div>
 
       <div className="bg-white border border-gray-200 shadow-sm">
-        <form action={createProduct} encType="multipart/form-data" className="p-8 space-y-8">
+        <form action={createProduct} className="p-8 space-y-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
             <div className="space-y-6">
               <div className="flex items-center space-x-2 text-bmw-blue mb-2">

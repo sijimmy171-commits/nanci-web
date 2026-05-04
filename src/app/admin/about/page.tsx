@@ -88,7 +88,7 @@ export default async function AdminAboutPage({
           </div>
         )}
 
-        <form action={updateAboutContent} encType="multipart/form-data" className="p-8 space-y-10">
+        <form action={updateAboutContent} className="p-8 space-y-10">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
             <div className="space-y-6">
               <h3 className="text-[10px] font-black text-bmw-silver uppercase tracking-[0.3em] border-b border-gray-100 pb-2">中文主版本</h3>

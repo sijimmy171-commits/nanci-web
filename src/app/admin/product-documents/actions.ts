@@ -15,6 +15,10 @@ import { autoTranslateLocalizedFields } from '@/lib/translation';
 import { saveUploadedFile } from '@/lib/uploads';
 import { requireAdminSession } from '@/lib/admin-auth';
 
+export type ProductDocumentFormState = {
+  error: string | null;
+};
+
 function buildTranslations(formData: FormData, existing?: Awaited<ReturnType<typeof getProductDocumentById>>) {
   const defaults = createEmptyProductDocumentTranslations();
   return normalizeProductDocumentTranslations({
@@ -59,7 +63,14 @@ function revalidateDocumentPages() {
   }
 }
 
-export async function createProductDocumentAction(formData: FormData): Promise<void> {
+function getActionErrorMessage(error: unknown) {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return 'Save failed. Please check the document details and try again.';
+}
+
+async function createProductDocumentMutation(formData: FormData) {
   await requireAdminSession();
 
   const file = formData.get('file');
@@ -70,7 +81,7 @@ export async function createProductDocumentAction(formData: FormData): Promise<v
   });
 
   if (!fileUrl) {
-    throw new Error('请上传 PDF 文件');
+    throw new Error('Please upload a PDF file.');
   }
 
   let translations = buildTranslations(formData);
@@ -89,15 +100,32 @@ export async function createProductDocumentAction(formData: FormData): Promise<v
   );
 
   revalidateDocumentPages();
+}
+
+export async function createProductDocumentAction(formData: FormData): Promise<void> {
+  await createProductDocumentMutation(formData);
   redirect('/admin/product-documents');
 }
 
-export async function updateProductDocumentAction(documentId: string, formData: FormData): Promise<void> {
+export async function createProductDocumentFormAction(
+  _previousState: ProductDocumentFormState,
+  formData: FormData
+): Promise<ProductDocumentFormState> {
+  try {
+    await createProductDocumentMutation(formData);
+  } catch (error) {
+    return { error: getActionErrorMessage(error) };
+  }
+
+  redirect('/admin/product-documents');
+}
+
+async function updateProductDocumentMutation(documentId: string, formData: FormData) {
   await requireAdminSession();
 
   const existing = await getProductDocumentById(documentId);
   if (!existing) {
-    throw new Error('产品资料不存在');
+    throw new Error('Product document does not exist.');
   }
 
   const file = formData.get('file');
@@ -124,6 +152,24 @@ export async function updateProductDocumentAction(documentId: string, formData: 
   );
 
   revalidateDocumentPages();
+}
+
+export async function updateProductDocumentAction(documentId: string, formData: FormData): Promise<void> {
+  await updateProductDocumentMutation(documentId, formData);
+  redirect('/admin/product-documents');
+}
+
+export async function updateProductDocumentFormAction(
+  documentId: string,
+  _previousState: ProductDocumentFormState,
+  formData: FormData
+): Promise<ProductDocumentFormState> {
+  try {
+    await updateProductDocumentMutation(documentId, formData);
+  } catch (error) {
+    return { error: getActionErrorMessage(error) };
+  }
+
   redirect('/admin/product-documents');
 }
 

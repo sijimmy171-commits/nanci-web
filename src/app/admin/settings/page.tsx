@@ -75,7 +75,7 @@ export default async function SettingsPage({
           </div>
         )}
 
-        <form action={updateSiteConfig} encType="multipart/form-data" className="p-8 space-y-10">
+        <form action={updateSiteConfig} className="p-8 space-y-10">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
             <div className="space-y-6">
               <h3 className="text-[10px] font-black text-bmw-silver uppercase tracking-[0.3em] border-b border-gray-100 pb-2">首页 Hero 与联系方式</h3>

@@ -128,5 +128,9 @@ export async function saveUploadedFile({
   const storageUrl = await saveToSupabaseStorage(file, safeFolder, filename, ext);
   if (storageUrl) return storageUrl;
 
+  if (process.env.VERCEL) {
+    throw new Error('Upload storage is not configured. Please configure Supabase Storage environment variables before uploading files in production.');
+  }
+
   return saveToLocalUploads(file, safeFolder, filename);
 }

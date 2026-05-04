@@ -40,7 +40,7 @@ export default async function EditProductPage({
       </div>
 
       <div className="bg-white border border-gray-200 shadow-sm">
-        <form action={updateProductWithId} encType="multipart/form-data" className="p-8 space-y-8">
+        <form action={updateProductWithId} className="p-8 space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="space-y-2">
               <label className="text-[10px] font-black text-bmw-black uppercase tracking-widest">中文产品名称</label>
