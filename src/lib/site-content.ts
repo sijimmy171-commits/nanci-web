@@ -404,14 +404,14 @@ const en: SiteDictionary = {
     copyright: 'Suzhou Nanci Electric Porcelain Appliance Co., Ltd. All rights reserved.',
   },
   home: {
-    heroTitle: 'Extreme Performance\nPowering Industrial Futures',
+    heroTitle: 'Ultimate Performance\nPowering Industry Forward',
     heroSub: 'Built on industrial-grade engineering and disciplined manufacturing, SUCI delivers dependable power equipment solutions for global projects.',
     primaryCta: 'Explore Products',
     secondaryCta: 'Contact Us',
     heroSlides: [
       {
         eyebrow: 'SUCI / POWER',
-        title: 'Extreme Performance\nPowering Industrial Futures',
+        title: 'Ultimate Performance\nPowering Industry Forward',
         subtitle: 'Built on industrial-grade engineering and disciplined manufacturing, SUCI delivers dependable power equipment solutions for global projects.',
         primaryCta: 'Explore Products',
         secondaryCta: 'Contact Us',

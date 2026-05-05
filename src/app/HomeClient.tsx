@@ -35,6 +35,18 @@ export default function HomeClient({ locale, dictionary, products }: HomeClientP
   }, [home.heroSlides.length]);
 
   const currentHero = home.heroSlides[currentSlide];
+  const titleLines = currentHero.title.split('\n');
+  const heroTitleLead = titleLines[0] || '';
+  const heroTitleSecondary = titleLines.slice(1).join(' ');
+  const useCompactEnglishHeroTitle = locale === 'en' && heroTitleSecondary.length > 20;
+  const heroTitleClassName = [
+    'font-black text-white mb-6 tracking-tighter leading-[0.95]',
+    useCompactEnglishHeroTitle ? 'text-5xl md:text-7xl lg:text-[5.75rem] xl:text-8xl' : 'text-5xl md:text-7xl lg:text-8xl',
+  ].join(' ');
+  const heroTitleSecondaryClassName = [
+    'block text-bmw-lightgray font-light tracking-wide',
+    useCompactEnglishHeroTitle ? 'text-[0.82em] md:text-[0.88em] lg:text-[0.92em] leading-[1.05]' : '',
+  ].join(' ');
 
   return (
     <div className="w-full bg-white text-bmw-darkgray">
@@ -57,9 +69,9 @@ export default function HomeClient({ locale, dictionary, products }: HomeClientP
               {currentHero.eyebrow}
             </motion.div>
 
-            <motion.h1 initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2, duration: 0.8 }} className="text-5xl md:text-7xl lg:text-8xl font-black text-white mb-6 tracking-tighter">
-              {currentHero.title.split('\n')[0]} <br />
-              <span className="text-bmw-lightgray font-light tracking-wide">{currentHero.title.split('\n')[1] || ''}</span>
+            <motion.h1 initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2, duration: 0.8 }} className={heroTitleClassName}>
+              {heroTitleLead}
+              {heroTitleSecondary && <span className={heroTitleSecondaryClassName}>{heroTitleSecondary}</span>}
             </motion.h1>
 
             <motion.p initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.4, duration: 0.8 }} className="text-xl md:text-2xl text-bmw-silver mb-12 font-light tracking-wider max-w-3xl mx-auto">
