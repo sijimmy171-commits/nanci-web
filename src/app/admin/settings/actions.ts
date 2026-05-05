@@ -9,11 +9,16 @@ import { autoTranslateOverrides } from '@/lib/translation';
 import { saveUploadedFile } from '@/lib/uploads';
 import { requireAdminSession } from '@/lib/admin-auth';
 
+function getText(formData: FormData, name: string) {
+  const value = formData.get(name);
+  return typeof value === 'string' ? value : '';
+}
+
 export async function updateSiteConfig(formData: FormData): Promise<void> {
   await requireAdminSession();
 
-  const heroTitle = formData.get('heroTitle') as string;
-  const heroSub = formData.get('heroSub') as string;
+  const heroTitle = getText(formData, 'heroSlide0TitleZh');
+  const heroSub = getText(formData, 'heroSlide0SubtitleZh');
   const contactMail = formData.get('contactMail') as string;
   const contactPhone = formData.get('contactPhone') as string;
   const whatsappNumber = formData.get('whatsappNumber') as string;
@@ -24,6 +29,58 @@ export async function updateSiteConfig(formData: FormData): Promise<void> {
   const existingOverrides = await getSiteContentOverrides();
 
   const overrides = normalizeSiteContentOverrides({
+    home: {
+      heroSlides: [
+        {
+          title: {
+            zh: getText(formData, 'heroSlide0TitleZh'),
+            en: getText(formData, 'heroSlide0TitleEn'),
+            es: existingOverrides.home.heroSlides[0].title.es,
+            fr: existingOverrides.home.heroSlides[0].title.fr,
+            ar: existingOverrides.home.heroSlides[0].title.ar,
+            ru: existingOverrides.home.heroSlides[0].title.ru,
+            de: existingOverrides.home.heroSlides[0].title.de,
+            id: existingOverrides.home.heroSlides[0].title.id,
+            vi: existingOverrides.home.heroSlides[0].title.vi,
+          },
+          subtitle: {
+            zh: getText(formData, 'heroSlide0SubtitleZh'),
+            en: getText(formData, 'heroSlide0SubtitleEn'),
+            es: existingOverrides.home.heroSlides[0].subtitle.es,
+            fr: existingOverrides.home.heroSlides[0].subtitle.fr,
+            ar: existingOverrides.home.heroSlides[0].subtitle.ar,
+            ru: existingOverrides.home.heroSlides[0].subtitle.ru,
+            de: existingOverrides.home.heroSlides[0].subtitle.de,
+            id: existingOverrides.home.heroSlides[0].subtitle.id,
+            vi: existingOverrides.home.heroSlides[0].subtitle.vi,
+          },
+        },
+        {
+          title: {
+            zh: getText(formData, 'heroSlide1TitleZh'),
+            en: getText(formData, 'heroSlide1TitleEn'),
+            es: existingOverrides.home.heroSlides[1].title.es,
+            fr: existingOverrides.home.heroSlides[1].title.fr,
+            ar: existingOverrides.home.heroSlides[1].title.ar,
+            ru: existingOverrides.home.heroSlides[1].title.ru,
+            de: existingOverrides.home.heroSlides[1].title.de,
+            id: existingOverrides.home.heroSlides[1].title.id,
+            vi: existingOverrides.home.heroSlides[1].title.vi,
+          },
+          subtitle: {
+            zh: getText(formData, 'heroSlide1SubtitleZh'),
+            en: getText(formData, 'heroSlide1SubtitleEn'),
+            es: existingOverrides.home.heroSlides[1].subtitle.es,
+            fr: existingOverrides.home.heroSlides[1].subtitle.fr,
+            ar: existingOverrides.home.heroSlides[1].subtitle.ar,
+            ru: existingOverrides.home.heroSlides[1].subtitle.ru,
+            de: existingOverrides.home.heroSlides[1].subtitle.de,
+            id: existingOverrides.home.heroSlides[1].subtitle.id,
+            vi: existingOverrides.home.heroSlides[1].subtitle.vi,
+          },
+        },
+      ],
+    },
     footer: {
       brandDescription: {
         zh: formData.get('footerBrandDescriptionZh'),

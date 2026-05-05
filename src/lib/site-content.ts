@@ -573,6 +573,30 @@ export function getDictionary(locale: string) {
 }
 
 function applyOverride(dictionary: SiteDictionary, locale: Locale, overrides: SiteContentOverrides) {
+  const firstHeroSlideTitle = resolveTranslatedField(overrides.home.heroSlides[0].title, locale);
+  const firstHeroSlideSubtitle = resolveTranslatedField(overrides.home.heroSlides[0].subtitle, locale);
+
+  if (firstHeroSlideTitle) {
+    dictionary.home.heroTitle = firstHeroSlideTitle;
+    dictionary.home.heroSlides[0].title = firstHeroSlideTitle;
+  }
+
+  if (firstHeroSlideSubtitle) {
+    dictionary.home.heroSub = firstHeroSlideSubtitle;
+    dictionary.home.heroSlides[0].subtitle = firstHeroSlideSubtitle;
+  }
+
+  const secondHeroSlideTitle = resolveTranslatedField(overrides.home.heroSlides[1].title, locale);
+  const secondHeroSlideSubtitle = resolveTranslatedField(overrides.home.heroSlides[1].subtitle, locale);
+
+  if (secondHeroSlideTitle) {
+    dictionary.home.heroSlides[1].title = secondHeroSlideTitle;
+  }
+
+  if (secondHeroSlideSubtitle) {
+    dictionary.home.heroSlides[1].subtitle = secondHeroSlideSubtitle;
+  }
+
   dictionary.footer.brandDescription = resolveTranslatedField(overrides.footer.brandDescription, locale) || dictionary.footer.brandDescription;
   dictionary.products.title = resolveTranslatedField(overrides.products.title, locale) || dictionary.products.title;
   dictionary.products.description = resolveTranslatedField(overrides.products.description, locale) || dictionary.products.description;

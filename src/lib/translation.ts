@@ -20,6 +20,10 @@ type TranslationPayloadEntry = {
 
 function collectEntries(overrides: SiteContentOverrides): TranslatableEntry[] {
   return [
+    { path: 'home.heroSlides.0.title', zh: overrides.home.heroSlides[0].title.zh, en: overrides.home.heroSlides[0].title.en },
+    { path: 'home.heroSlides.0.subtitle', zh: overrides.home.heroSlides[0].subtitle.zh, en: overrides.home.heroSlides[0].subtitle.en },
+    { path: 'home.heroSlides.1.title', zh: overrides.home.heroSlides[1].title.zh, en: overrides.home.heroSlides[1].title.en },
+    { path: 'home.heroSlides.1.subtitle', zh: overrides.home.heroSlides[1].subtitle.zh, en: overrides.home.heroSlides[1].subtitle.en },
     { path: 'footer.brandDescription', zh: overrides.footer.brandDescription.zh, en: overrides.footer.brandDescription.en },
     { path: 'products.title', zh: overrides.products.title.zh, en: overrides.products.title.en },
     { path: 'products.description', zh: overrides.products.description.zh, en: overrides.products.description.en },
@@ -49,6 +53,18 @@ function mergeField(field: LocalizedField, translated: Partial<Record<Locale, st
 
 function mergeTranslations(overrides: SiteContentOverrides, translated: TranslationResponse): SiteContentOverrides {
   return {
+    home: {
+      heroSlides: [
+        {
+          title: mergeField(overrides.home.heroSlides[0].title, translated['home.heroSlides.0.title']),
+          subtitle: mergeField(overrides.home.heroSlides[0].subtitle, translated['home.heroSlides.0.subtitle']),
+        },
+        {
+          title: mergeField(overrides.home.heroSlides[1].title, translated['home.heroSlides.1.title']),
+          subtitle: mergeField(overrides.home.heroSlides[1].subtitle, translated['home.heroSlides.1.subtitle']),
+        },
+      ],
+    },
     footer: {
       brandDescription: mergeField(overrides.footer.brandDescription, translated['footer.brandDescription']),
     },

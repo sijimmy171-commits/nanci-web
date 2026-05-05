@@ -44,6 +44,10 @@ export default async function SettingsPage({
   const translation = typeof params.translation === 'string' ? params.translation : '';
   const showSaved = status === 'saved';
   const qrPreviewSrc = config?.wechatQrUrl || '/wechat-qr-placeholder.svg';
+  const heroSlide0 = overrides.home.heroSlides[0];
+  const heroSlide1 = overrides.home.heroSlides[1];
+  const heroSlide0TitleZh = heroSlide0.title.zh || config?.heroTitle || '';
+  const heroSlide0SubtitleZh = heroSlide0.subtitle.zh || config?.heroSub || '';
 
   const feedbackMessage =
     translation === 'done'
@@ -79,8 +83,14 @@ export default async function SettingsPage({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
             <div className="space-y-6">
               <h3 className="text-[10px] font-black text-bmw-silver uppercase tracking-[0.3em] border-b border-gray-100 pb-2">首页 Hero 与联系方式</h3>
-              <TextareaField label="中文主标题 (Hero Title)" name="heroTitle" defaultValue={config?.heroTitle ?? ''} rows={2} />
-              <TextareaField label="中文副标题 (Hero Subtitle)" name="heroSub" defaultValue={config?.heroSub ?? ''} rows={4} />
+              <TextareaField label="第一张 Banner 主标题（中文）" name="heroSlide0TitleZh" defaultValue={heroSlide0TitleZh} rows={2} hint="显示在中文首页第一张滚动 Banner 的大标题。" />
+              <TextareaField label="第一张 Banner 主标题（英文）" name="heroSlide0TitleEn" defaultValue={heroSlide0.title.en} rows={2} hint="显示在英文首页第一张滚动 Banner 的大标题。" />
+              <TextareaField label="第一张 Banner 副标题（中文）" name="heroSlide0SubtitleZh" defaultValue={heroSlide0SubtitleZh} rows={4} hint="显示在中文首页第一张滚动 Banner 的说明文字。" />
+              <TextareaField label="第一张 Banner 副标题（英文）" name="heroSlide0SubtitleEn" defaultValue={heroSlide0.subtitle.en} rows={4} hint="显示在英文首页第一张滚动 Banner 的说明文字。" />
+              <TextareaField label="第二张 Banner 主标题（中文）" name="heroSlide1TitleZh" defaultValue={heroSlide1.title.zh} rows={2} hint="显示在中文首页第二张滚动 Banner 的大标题。" />
+              <TextareaField label="第二张 Banner 主标题（英文）" name="heroSlide1TitleEn" defaultValue={heroSlide1.title.en} rows={2} hint="显示在英文首页第二张滚动 Banner 的大标题。" />
+              <TextareaField label="第二张 Banner 副标题（中文）" name="heroSlide1SubtitleZh" defaultValue={heroSlide1.subtitle.zh} rows={4} hint="显示在中文首页第二张滚动 Banner 的说明文字。" />
+              <TextareaField label="第二张 Banner 副标题（英文）" name="heroSlide1SubtitleEn" defaultValue={heroSlide1.subtitle.en} rows={4} hint="显示在英文首页第二张滚动 Banner 的说明文字。" />
 
               <div className="space-y-2">
                 <label className="text-xs font-bold text-bmw-black uppercase">客服邮箱</label>

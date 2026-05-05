@@ -6,6 +6,12 @@ import { defaultLocale, locales, type Locale } from '@/lib/i18n';
 export type LocalizedField = Record<Locale, string>;
 
 export type SiteContentOverrides = {
+  home: {
+    heroSlides: Array<{
+      title: LocalizedField;
+      subtitle: LocalizedField;
+    }>;
+  };
   footer: {
     brandDescription: LocalizedField;
   };
@@ -35,6 +41,18 @@ export function createEmptyLocalizedField(): LocalizedField {
 }
 
 export const defaultSiteContentOverrides: SiteContentOverrides = {
+  home: {
+    heroSlides: [
+      {
+        title: createEmptyLocalizedField(),
+        subtitle: createEmptyLocalizedField(),
+      },
+      {
+        title: createEmptyLocalizedField(),
+        subtitle: createEmptyLocalizedField(),
+      },
+    ],
+  },
   footer: {
     brandDescription: createEmptyLocalizedField(),
   },
@@ -71,11 +89,23 @@ function mergeLocalizedField(value: unknown, fallback: LocalizedField): Localize
 
 export function normalizeSiteContentOverrides(value: unknown): SiteContentOverrides {
   const source = isObject(value) ? value : {};
+  const home = isObject(source.home) ? source.home : {};
+  const heroSlides = Array.isArray(home.heroSlides) ? home.heroSlides : [];
   const footer = isObject(source.footer) ? source.footer : {};
   const products = isObject(source.products) ? source.products : {};
   const contact = isObject(source.contact) ? source.contact : {};
 
   return {
+    home: {
+      heroSlides: defaultSiteContentOverrides.home.heroSlides.map((fallback, index) => {
+        const slide = isObject(heroSlides[index]) ? heroSlides[index] : {};
+
+        return {
+          title: mergeLocalizedField(slide.title, fallback.title),
+          subtitle: mergeLocalizedField(slide.subtitle, fallback.subtitle),
+        };
+      }),
+    },
     footer: {
       brandDescription: mergeLocalizedField(footer.brandDescription, defaultSiteContentOverrides.footer.brandDescription),
     },
