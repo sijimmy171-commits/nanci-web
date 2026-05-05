@@ -1,7 +1,6 @@
 ﻿'use server';
 
 import { revalidatePath } from 'next/cache';
-import { redirect } from 'next/navigation';
 import { publishedLocales } from '@/lib/i18n';
 import { prisma } from '@/lib/prisma';
 import {
@@ -22,12 +21,12 @@ import {
   type ProductTertiaryCategoryKey,
 } from '@/lib/product-taxonomy';
 import { autoTranslateLocalizedFields } from '@/lib/translation';
-import { saveUploadedFile } from '@/lib/uploads';
+import { createSignedUploadTarget, saveUploadedFile } from '@/lib/uploads';
 import { requireAdminSession } from '@/lib/admin-auth';
 
-type ActionResult = {
+export type ProductFormState = {
   success: boolean;
-  error?: string;
+  error: string | null;
 };
 
 function getSubmittedCategories(formData: FormData): {
@@ -57,7 +56,23 @@ function getSubmittedCategories(formData: FormData): {
   };
 }
 
-export async function createProduct(formData: FormData): Promise<void> {
+export async function createProductImageUploadTargetAction(input: {
+  filename: string;
+  contentType: string;
+  size: number;
+}) {
+  await requireAdminSession();
+
+  return createSignedUploadTarget({
+    filename: input.filename,
+    contentType: input.contentType,
+    size: input.size,
+    folder: 'products/images',
+    allowedExtensions: ['.jpg', '.jpeg', '.png', '.webp'],
+  });
+}
+
+export async function createProduct(formData: FormData): Promise<ProductFormState> {
   await requireAdminSession();
 
   const name = formData.get('name') as string;
@@ -71,14 +86,17 @@ export async function createProduct(formData: FormData): Promise<void> {
   const specsEn = formData.get('specsEn') as string;
   const shouldAutoTranslate = formData.get('autoTranslate') === 'on';
   const imageFile = formData.get('imageFile');
+  const submittedImageUrl = formData.get('imageUrl');
 
   try {
     await ensureProductColumns();
-    const imageUrl = await saveUploadedFile({
-      file: imageFile instanceof File ? imageFile : null,
-      folder: 'products/images',
-      allowedExtensions: ['.jpg', '.jpeg', '.png', '.webp'],
-    });
+    const imageUrl = typeof submittedImageUrl === 'string' && submittedImageUrl
+      ? submittedImageUrl
+      : await saveUploadedFile({
+          file: imageFile instanceof File ? imageFile : null,
+          folder: 'products/images',
+          allowedExtensions: ['.jpg', '.jpeg', '.png', '.webp'],
+        });
 
     const product = await prisma.product.create({
       data: {
@@ -130,13 +148,13 @@ export async function createProduct(formData: FormData): Promise<void> {
     }
   } catch (error) {
     console.error('Failed to create product:', error);
-    throw new Error('产品创建失败，请稍后重试。');
+    return { success: false, error: error instanceof Error ? error.message : '产品创建失败，请稍后重试。' };
   }
 
-  redirect('/admin/products');
+  return { success: true, error: null };
 }
 
-export async function updateProduct(productId: string, formData: FormData): Promise<void> {
+export async function updateProduct(productId: string, formData: FormData): Promise<ProductFormState> {
   await requireAdminSession();
 
   const name = formData.get('name') as string;
@@ -149,6 +167,7 @@ export async function updateProduct(productId: string, formData: FormData): Prom
   const descriptionEn = formData.get('descriptionEn') as string;
   const specsEn = formData.get('specsEn') as string;
   const shouldAutoTranslate = formData.get('autoTranslate') === 'on';
+  const submittedImageUrl = formData.get('imageUrl');
 
   try {
     await ensureProductColumns();
@@ -162,12 +181,14 @@ export async function updateProduct(productId: string, formData: FormData): Prom
     }
 
     const imageFile = formData.get('imageFile');
-    const imageUrl = await saveUploadedFile({
-      file: imageFile instanceof File ? imageFile : null,
-      folder: 'products/images',
-      allowedExtensions: ['.jpg', '.jpeg', '.png', '.webp'],
-      fallbackUrl: existingProduct.imageUrl,
-    });
+    const imageUrl = typeof submittedImageUrl === 'string' && submittedImageUrl
+      ? submittedImageUrl
+      : await saveUploadedFile({
+          file: imageFile instanceof File ? imageFile : null,
+          folder: 'products/images',
+          allowedExtensions: ['.jpg', '.jpeg', '.png', '.webp'],
+          fallbackUrl: existingProduct.imageUrl,
+        });
 
     await prisma.product.update({
       where: { id: productId },
@@ -223,13 +244,13 @@ export async function updateProduct(productId: string, formData: FormData): Prom
     }
   } catch (error) {
     console.error('Failed to update product:', error);
-    throw new Error('产品更新失败，请稍后重试。');
+    return { success: false, error: error instanceof Error ? error.message : '产品更新失败，请稍后重试。' };
   }
 
-  redirect('/admin/products');
+  return { success: true, error: null };
 }
 
-export async function deleteProduct(productId: string): Promise<ActionResult> {
+export async function deleteProduct(productId: string): Promise<ProductFormState> {
   try {
     await requireAdminSession();
 
@@ -243,7 +264,7 @@ export async function deleteProduct(productId: string): Promise<ActionResult> {
       revalidatePath(`/${locale}/products`);
       revalidatePath(`/${locale}/products/${productId}`);
     }
-    return { success: true };
+    return { success: true, error: null };
   } catch (error) {
     console.error('Failed to delete product:', error);
     return { success: false, error: '产品删除失败，请稍后重试。' };
