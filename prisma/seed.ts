@@ -11,13 +11,27 @@ const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
-  const hashedPassword = await bcrypt.hash('ZhangBiJun0927', 10);
+  const adminEmail = process.env.ADMIN_SEED_EMAIL?.trim();
+  const adminPassword = process.env.ADMIN_SEED_PASSWORD;
+
+  if (!adminEmail || !adminPassword) {
+    throw new Error('ADMIN_SEED_EMAIL and ADMIN_SEED_PASSWORD are required to seed an administrator.');
+  }
+
+  if (adminPassword.length < 14) {
+    throw new Error('ADMIN_SEED_PASSWORD must be at least 14 characters long.');
+  }
+
+  const hashedPassword = await bcrypt.hash(adminPassword, 12);
 
   await prisma.user.upsert({
-    where: { email: 'admin@suci.com' },
-    update: {},
+    where: { email: adminEmail },
+    update: {
+      password: hashedPassword,
+      role: 'ADMIN',
+    },
     create: {
-      email: 'admin@suci.com',
+      email: adminEmail,
       password: hashedPassword,
       role: 'ADMIN',
     },
@@ -28,8 +42,8 @@ async function main() {
     update: {},
     create: {
       id: 'default',
-      heroTitle: '¼«ÖÂÐÔÄÜ\nÇý¶¯¹¤ÒµÎ´À´',
-      heroSub: '»ùÓÚ¹¤ÒµÃÀÑ§ÓëÑÏ½÷ÖÆÔìÌåÏµ£¬ËÕÖÝÄÏ´ÉÎªÄú´òÔì¸ß¿É¿¿µÄµçÁ¦ÅäÌ×Éè±¸½â¾ö·½°¸¡£',
+      heroTitle: 'æžè‡´æ€§èƒ½\né©±åŠ¨å·¥ä¸šæœªæ¥',
+      heroSub: 'åŸºäºŽå·¥ä¸šç¾Žå­¦ä¸Žä¸¥è°¨åˆ¶é€ ä½“ç³»ï¼Œè‹å·žå—ç“·ä¸ºæ‚¨æ‰“é€ é«˜å¯é çš„ç”µåŠ›é…å¥—è®¾å¤‡è§£å†³æ–¹æ¡ˆã€‚',
     },
   });
 

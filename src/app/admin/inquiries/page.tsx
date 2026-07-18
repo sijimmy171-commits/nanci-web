@@ -1,9 +1,15 @@
 import React from 'react';
 import Link from 'next/link';
-import { MessageSquare, Mail, Clock, Building, Package, Phone, Eye, Reply, Inbox } from 'lucide-react';
+import { MessageSquare, Mail, Clock, Building, Package, Phone, Eye, Reply, Inbox, RefreshCw, Send } from 'lucide-react';
 import { requireAdminSession } from '@/lib/admin-auth';
-import { listInquiries, getInquiryStatusCounts, isInquiryStatus, type InquiryStatus } from '@/lib/inquiries';
-import { updateInquiryStatusAction } from './actions';
+import {
+  listInquiries,
+  getInquiryStatusCounts,
+  isInquiryStatus,
+  type InquiryNotificationStatus,
+  type InquiryStatus,
+} from '@/lib/inquiries';
+import { retryInquiryNotificationAction, updateInquiryStatusAction } from './actions';
 
 const statusCopy: Record<InquiryStatus, { label: string; badge: string; card: string; icon: typeof Inbox }> = {
   PENDING: {
@@ -24,6 +30,12 @@ const statusCopy: Record<InquiryStatus, { label: string; badge: string; card: st
     card: 'bg-green-50 text-green-700 border-green-200',
     icon: Reply,
   },
+};
+
+const notificationCopy: Record<InquiryNotificationStatus, { label: string; badge: string }> = {
+  PENDING: { label: '邮件待发送', badge: 'bg-gray-100 text-gray-600' },
+  SENT: { label: '邮件已发送', badge: 'bg-blue-100 text-blue-700' },
+  FAILED: { label: '邮件发送失败', badge: 'bg-red-100 text-red-700' },
 };
 
 function getActiveFilter(value: string | string[] | undefined): InquiryStatus | 'ALL' {
@@ -98,8 +110,11 @@ export default async function AdminInquiriesPage({
           filteredInquiries.map((inquiry) => {
             const status = isInquiryStatus(inquiry.status) ? inquiry.status : 'PENDING';
             const visual = statusCopy[status];
+            const notification = notificationCopy[inquiry.notificationStatus];
             const markReadAction = updateInquiryStatusAction.bind(null, inquiry.id);
             const markRepliedAction = updateInquiryStatusAction.bind(null, inquiry.id);
+            const retryNotificationAction = retryInquiryNotificationAction.bind(null, inquiry.id);
+            const replyHref = `mailto:${inquiry.clientEmail}?subject=${encodeURIComponent(`回复：${inquiry.productType} 产品询盘`)}`;
 
             return (
               <div key={inquiry.id} className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow group overflow-hidden">
@@ -133,6 +148,20 @@ export default async function AdminInquiriesPage({
                       <div className="flex items-center text-xs text-bmw-black font-bold">
                         <Package className="w-3.5 h-3.5 mr-2 text-bmw-blue shrink-0" /> {inquiry.productType}
                       </div>
+                      <div className="pt-2 space-y-2">
+                        <span className={`inline-flex px-2 py-1 text-[10px] font-bold uppercase tracking-wider ${notification.badge}`}>
+                          {notification.label}
+                        </span>
+                        <div className="text-[10px] leading-relaxed text-gray-400">
+                          已尝试 {inquiry.notificationAttempts} 次
+                          {inquiry.notificationSentAt ? ` · ${new Date(inquiry.notificationSentAt).toLocaleString()}` : ''}
+                        </div>
+                        {inquiry.notificationError && (
+                          <p className="break-words text-[10px] leading-relaxed text-red-600" title={inquiry.notificationError}>
+                            {inquiry.notificationError}
+                          </p>
+                        )}
+                      </div>
                     </div>
                   </div>
 
@@ -149,6 +178,24 @@ export default async function AdminInquiriesPage({
                     </div>
 
                     <div className="space-y-3">
+                      <a
+                        href={replyHref}
+                        className="w-full text-[10px] font-bold text-bmw-blue uppercase tracking-widest flex items-center justify-center gap-2 border border-bmw-blue/30 py-3 bg-blue-50 hover:border-bmw-blue transition-colors"
+                      >
+                        <Send className="w-3.5 h-3.5" /> 回复客户
+                      </a>
+
+                      {inquiry.notificationStatus !== 'SENT' && (
+                        <form action={retryNotificationAction}>
+                          <button
+                            type="submit"
+                            className="w-full text-[10px] font-bold text-gray-700 uppercase tracking-widest flex items-center justify-center gap-2 border border-gray-300 py-3 bg-white hover:border-bmw-black transition-colors"
+                          >
+                            <RefreshCw className="w-3.5 h-3.5" /> 重试邮件通知
+                          </button>
+                        </form>
+                      )}
+
                       <form action={markReadAction}>
                         <input type="hidden" name="status" value="READ" />
                         <button

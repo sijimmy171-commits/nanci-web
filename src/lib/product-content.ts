@@ -5,15 +5,10 @@ import { prisma } from '@/lib/prisma';
 import { type Locale } from '@/lib/i18n';
 import { createEmptyLocalizedField, getFallbackLocale, type LocalizedField } from '@/lib/site-content-overrides';
 import {
-  getDisplayCategoryLabel,
-  getLegacyCategoryFallback,
-  getPrimaryCategoryLabel,
-  isPrimaryCategoryKey,
-  isSecondaryCategoryKey,
-  isTertiaryCategoryKey,
-  type ProductPrimaryCategoryKey,
-  type ProductSecondaryCategoryKey,
-  type ProductTertiaryCategoryKey,
+  getLegacyProductCategory,
+  getProductCategoryLabel,
+  isProductCategoryKey,
+  type ProductCategoryKey,
 } from '@/lib/product-taxonomy';
 
 export type ProductTranslations = {
@@ -28,9 +23,10 @@ export type ProductRecord = {
   model: string;
   category: string;
   categoryStatus: 'structured' | 'legacy' | 'unmapped';
-  primaryCategory: ProductPrimaryCategoryKey | null;
-  secondaryCategory: ProductSecondaryCategoryKey | null;
-  tertiaryCategory: ProductTertiaryCategoryKey | null;
+  productCategory: ProductCategoryKey | null;
+  primaryCategory: string | null;
+  secondaryCategory: string | null;
+  tertiaryCategory: string | null;
   description: string | null;
   specs: string | null;
   imageUrl: string | null;
@@ -106,22 +102,20 @@ function normalizeCategoryFields(row: {
   primaryCategory: string | null;
   secondaryCategory: string | null;
   tertiaryCategory: string | null;
-}): Pick<ProductRecord, 'categoryStatus' | 'primaryCategory' | 'secondaryCategory' | 'tertiaryCategory'> {
-  const fallback = getLegacyCategoryFallback(row.category);
-  const hasStructuredPrimary = isPrimaryCategoryKey(row.primaryCategory);
-  const hasStructuredSecondary = isSecondaryCategoryKey(row.secondaryCategory);
-  const hasStructuredTertiary = !row.tertiaryCategory || isTertiaryCategoryKey(row.tertiaryCategory);
-  const categoryStatus: ProductRecord['categoryStatus'] = hasStructuredPrimary && hasStructuredSecondary && hasStructuredTertiary
+}): Pick<ProductRecord, 'categoryStatus' | 'productCategory' | 'primaryCategory' | 'secondaryCategory' | 'tertiaryCategory'> {
+  const productCategory = getLegacyProductCategory(row);
+  const categoryStatus: ProductRecord['categoryStatus'] = isProductCategoryKey(row.secondaryCategory)
     ? 'structured'
-    : fallback.primaryCategory
+    : productCategory
       ? 'legacy'
       : 'unmapped';
 
   return {
     categoryStatus,
-    primaryCategory: hasStructuredPrimary ? (row.primaryCategory as ProductPrimaryCategoryKey) : fallback.primaryCategory,
-    secondaryCategory: hasStructuredSecondary ? (row.secondaryCategory as ProductSecondaryCategoryKey) : fallback.secondaryCategory,
-    tertiaryCategory: isTertiaryCategoryKey(row.tertiaryCategory) ? row.tertiaryCategory : fallback.tertiaryCategory,
+    productCategory,
+    primaryCategory: row.primaryCategory,
+    secondaryCategory: row.secondaryCategory,
+    tertiaryCategory: row.tertiaryCategory,
   };
 }
 
@@ -132,7 +126,7 @@ function normalizeProductRow(row: ProductRow): ProductRecord {
     name: row.name,
     model: row.model,
     ...categories,
-    category: row.category || getDisplayCategoryLabel(categories, 'zh') || getPrimaryCategoryLabel(categories.primaryCategory, 'zh'),
+    category: getProductCategoryLabel(categories.productCategory, 'zh') || row.category,
     description: row.description,
     specs: row.specs,
     imageUrl: row.imageUrl,
@@ -142,39 +136,35 @@ function normalizeProductRow(row: ProductRow): ProductRecord {
   };
 }
 
-export function buildLegacyCategoryValue(categories: {
-  primaryCategory: ProductPrimaryCategoryKey | null;
-  secondaryCategory: ProductSecondaryCategoryKey | null;
-  tertiaryCategory: ProductTertiaryCategoryKey | null;
-}) {
-  return getDisplayCategoryLabel(categories, 'zh') || getPrimaryCategoryLabel(categories.primaryCategory, 'zh') || '';
+export function buildLegacyCategoryValue(productCategory: ProductCategoryKey) {
+  return getProductCategoryLabel(productCategory, 'zh');
 }
 
 export async function saveProductCategoryFields(
   productId: string,
-  categories: {
-    primaryCategory: ProductPrimaryCategoryKey | null;
-    secondaryCategory: ProductSecondaryCategoryKey | null;
-    tertiaryCategory: ProductTertiaryCategoryKey | null;
-  }
+  productCategory: ProductCategoryKey,
+  client: Prisma.TransactionClient | typeof prisma = prisma
 ) {
-  await ensureProductColumns();
-  await prisma.$executeRawUnsafe(
+  const primaryCategory = ['wall-bushings', 'transformer-bushings'].includes(productCategory) ? 'bushings' : 'insulators';
+  await client.$executeRawUnsafe(
     'UPDATE "Product" SET "primaryCategory" = $1, "secondaryCategory" = $2, "tertiaryCategory" = $3 WHERE id = $4',
-    categories.primaryCategory,
-    categories.secondaryCategory,
-    categories.tertiaryCategory,
+    primaryCategory,
+    productCategory,
+    null,
     productId
   );
 }
 
 export async function listProducts(): Promise<ProductRecord[]> {
+  const rows = await listProductRows();
+  return rows.map((row) => normalizeProductRow(row));
+}
+
+async function listProductRows(): Promise<ProductRow[]> {
   await ensureProductColumns();
-  const rows = await prisma.$queryRawUnsafe<ProductRow[]>(
+  return prisma.$queryRawUnsafe<ProductRow[]>(
     'SELECT id, name, model, category, "primaryCategory" AS "primaryCategory", "secondaryCategory" AS "secondaryCategory", "tertiaryCategory" AS "tertiaryCategory", description, specs, "imageUrl" AS "imageUrl", "catalogUrl" AS "catalogUrl", "createdAt" AS "createdAt", "updatedAt" AS "updatedAt", "contentTranslations" AS "contentTranslations" FROM "Product" ORDER BY "createdAt" DESC'
   );
-
-  return rows.map((row) => normalizeProductRow(row));
 }
 
 export async function getProductById(id: string): Promise<ProductRecord | null> {
@@ -189,17 +179,6 @@ export async function getProductById(id: string): Promise<ProductRecord | null> 
   return normalizeProductRow(product);
 }
 
-export async function getProductTranslationsMap(): Promise<Map<string, ProductTranslations>> {
-  await ensureProductColumns();
-  const rows = await prisma.$queryRawUnsafe<ProductTranslationRow[]>(
-    'SELECT id, "contentTranslations" FROM "Product"'
-  );
-
-  return new Map(
-    rows.map((row) => [row.id, normalizeProductTranslations(row.contentTranslations)])
-  );
-}
-
 export async function getProductTranslations(productId: string): Promise<ProductTranslations> {
   await ensureProductColumns();
   const rows = await prisma.$queryRawUnsafe<ProductTranslationRow[]>(
@@ -210,9 +189,12 @@ export async function getProductTranslations(productId: string): Promise<Product
   return normalizeProductTranslations(rows[0]?.contentTranslations ?? null);
 }
 
-export async function saveProductTranslations(productId: string, translations: ProductTranslations) {
-  await ensureProductColumns();
-  await prisma.$executeRawUnsafe(
+export async function saveProductTranslations(
+  productId: string,
+  translations: ProductTranslations,
+  client: Prisma.TransactionClient | typeof prisma = prisma
+) {
+  await client.$executeRawUnsafe(
     'UPDATE "Product" SET "contentTranslations" = $1::jsonb WHERE id = $2',
     JSON.stringify(translations),
     productId
@@ -234,14 +216,12 @@ export function localizeProduct(product: ProductRecord, translations: ProductTra
 }
 
 export async function getLocalizedProducts(locale: Locale): Promise<LocalizedProductRecord[]> {
-  const [products, translationsMap] = await Promise.all([
-    listProducts(),
-    getProductTranslationsMap(),
-  ]);
-
-  return products.map((product) =>
-    localizeProduct(product, translationsMap.get(product.id) ?? createEmptyProductTranslations(), locale)
-  );
+  const rows = await listProductRows();
+  return rows.map((row) => localizeProduct(
+    normalizeProductRow(row),
+    normalizeProductTranslations(row.contentTranslations),
+    locale
+  ));
 }
 
 export async function getLocalizedProductById(id: string, locale: Locale): Promise<LocalizedProductRecord | null> {

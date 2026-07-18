@@ -2,10 +2,13 @@ import React from 'react';
 import Link from 'next/link';
 import { Phone, Mail, ChevronRight } from 'lucide-react';
 import { getLocalizedPath, type Locale } from '@/lib/i18n';
+import { getProductCategories } from '@/lib/product-taxonomy';
 import type { SiteConfigRecord } from '@/lib/site-config';
 import type { SiteDictionary } from '@/lib/site-content';
 
 export default function Footer({ locale, dictionary, config }: { locale: Locale; dictionary: SiteDictionary; config: SiteConfigRecord | null }) {
+  const productCategories = getProductCategories(locale);
+
   return (
     <footer className="bg-bmw-lightgray border-t border-gray-200 pt-20 pb-10 text-gray-600">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -20,10 +23,10 @@ export default function Footer({ locale, dictionary, config }: { locale: Locale;
           <div>
             <h4 className="text-bmw-black font-bold uppercase tracking-widest text-sm mb-6">{dictionary.footer.coreSeriesTitle}</h4>
             <ul className="space-y-4">
-              {dictionary.footer.coreSeries.map((item) => (
-                <li key={item}>
-                  <Link href={getLocalizedPath(locale, '/products')} className="text-sm hover:text-bmw-blue transition-colors flex items-center group">
-                    <ChevronRight className="w-3 h-3 mr-2 text-gray-400 group-hover:text-bmw-blue transition-colors" /> {item}
+              {productCategories.map((category) => (
+                <li key={category.key}>
+                  <Link href={`${getLocalizedPath(locale, '/products')}?category=${category.key}`} className="text-sm hover:text-bmw-blue transition-colors flex items-center group">
+                    <ChevronRight className="w-3 h-3 mr-2 text-gray-400 group-hover:text-bmw-blue transition-colors" /> {category.label}
                   </Link>
                 </li>
               ))}

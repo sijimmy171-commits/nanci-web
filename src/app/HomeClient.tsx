@@ -11,7 +11,8 @@ import ContactForm from './contact/ContactForm';
 type FeaturedProduct = {
   id: string;
   name: string;
-  description: string | null;
+  model: string;
+  specs: string | null;
   imageUrl: string | null;
 };
 
@@ -140,20 +141,21 @@ export default function HomeClient({ locale, dictionary, products }: HomeClientP
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {products.map((product) => (
-              <Link key={product.id} href={getLocalizedPath(locale, `/products/${product.id}`)} className="group relative bg-bmw-lightgray border border-gray-200 overflow-hidden hover:shadow-xl transition-all">
+              <article key={product.id} className="relative overflow-hidden border border-gray-200 bg-bmw-lightgray">
                 <div className="relative aspect-[4/3] bg-gray-200 overflow-hidden">
                   {product.imageUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={product.imageUrl} alt={product.name} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                    <img src={product.imageUrl} alt={product.name} className="h-full w-full bg-white object-contain p-6" />
                   ) : (
                     <div className="w-full h-full bg-[linear-gradient(135deg,#dbe4ee,#f8fafc)]" />
                   )}
                 </div>
                 <div className="p-8">
-                  <h4 className="text-xl font-bold text-bmw-black mb-4">{product.name}</h4>
-                  <p className="text-sm text-gray-500 line-clamp-2">{product.description || dictionary.products.detail.fallbackDescription}</p>
+                  <h4 className="text-xl font-bold text-bmw-black">{product.name}</h4>
+                  <p className="mt-2 text-[10px] font-bold uppercase tracking-[0.2em] text-bmw-silver">{product.model}</p>
+                  <p className="mt-4 truncate text-sm text-gray-500">{product.specs || (locale === 'zh' ? '规格待补充' : 'Specifications pending')}</p>
                 </div>
-              </Link>
+              </article>
             ))}
           </div>
 

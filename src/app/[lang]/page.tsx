@@ -21,7 +21,8 @@ export default async function HomePage({ params }: { params: Promise<{ lang: str
       products={products.slice(0, 3).map((product) => ({
         id: product.id,
         name: product.name,
-        description: product.description,
+        model: product.model,
+        specs: product.specs,
         imageUrl: product.imageUrl,
       }))}
     />

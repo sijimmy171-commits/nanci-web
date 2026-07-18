@@ -197,7 +197,7 @@ const zh: SiteDictionary = {
     ],
   },
   footer: {
-    brandDescription: '致力成为优质的电力配套设备及解决方案提供商，专注高品质绝缘子、避雷器研发制造。',
+    brandDescription: '致力成为优质的电力配套设备及解决方案提供商，专注高品质绝缘产品研发制造。',
     coreSeriesTitle: '核心系列',
     coreSeries: ['支柱复合绝缘子', '空心复合绝缘子', '氧化锌避雷器', '高压隔离开关'],
     quickLinksTitle: '快捷导航',
@@ -394,7 +394,7 @@ const en: SiteDictionary = {
     ],
   },
   footer: {
-    brandDescription: 'We provide reliable power equipment and supporting solutions, with a strong focus on insulators, surge arresters, and engineered grid components.',
+    brandDescription: 'We provide reliable power equipment and supporting solutions, with a strong focus on premium insulation products and engineered grid components.',
     coreSeriesTitle: 'Core Lines',
     coreSeries: ['Post Composite Insulator', 'Hollow Composite Insulator', 'Metal Oxide Surge Arrester', 'High Voltage Disconnect Switch'],
     quickLinksTitle: 'Quick Links',

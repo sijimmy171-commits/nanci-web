@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { createInquiryRecord } from '@/lib/inquiries';
+import { createInquiryRecord, recordInquiryNotificationResult } from '@/lib/inquiries';
 import { sendInquiryNotification } from '@/lib/mail';
 
 // Simple in-memory rate limiting (per serverless instance)
@@ -98,8 +98,9 @@ export async function createInquiry(formData: FormData) {
 
   const { clientName, clientEmail, phone, companyName, productType, message } = validation.data;
 
+  let inquiryId: string;
   try {
-    await createInquiryRecord({
+    inquiryId = await createInquiryRecord({
       clientName,
       clientEmail,
       phone,
@@ -108,19 +109,30 @@ export async function createInquiry(formData: FormData) {
       message,
     });
 
-    sendInquiryNotification({
+  } catch (error) {
+    console.error('Failed to create inquiry:', error);
+    return { success: false, error: 'Inquiry submission failed. Please try again later.' };
+  }
+
+  try {
+    const notificationResult = await sendInquiryNotification({
       name: clientName,
       email: clientEmail,
       phone,
       company: companyName,
       product: productType,
       message,
-    }).catch(console.error);
-
-    revalidatePath('/admin/inquiries');
-    return { success: true };
+    });
+    await recordInquiryNotificationResult(inquiryId, notificationResult);
   } catch (error) {
-    console.error('Failed to create inquiry:', error);
-    return { success: false, error: 'Inquiry submission failed. Please try again later.' };
+    console.error('Failed to record inquiry notification result:', error);
   }
+
+  try {
+    revalidatePath('/admin/inquiries');
+  } catch (error) {
+    console.error('Failed to revalidate inquiry admin page:', error);
+  }
+
+  return { success: true };
 }

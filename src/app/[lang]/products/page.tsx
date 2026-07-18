@@ -8,10 +8,10 @@ import ProductList from '../../products/ProductList';
 import ProductDocumentsSection from '../../products/ProductDocumentsSection';
 import { getResolvedDictionary } from '@/lib/site-content';
 import { getLocalizedPath, hasLocale, type Locale } from '@/lib/i18n';
-import { isPrimaryCategoryKey, type ProductPrimaryCategoryKey } from '@/lib/product-taxonomy';
+import { isProductCategoryKey, type ProductCategoryKey } from '@/lib/product-taxonomy';
 
 type SearchParams = Promise<{
-  primary?: string | string[] | undefined;
+  category?: string | string[] | undefined;
 }>;
 
 export default async function LocalizedProductsPage({
@@ -26,8 +26,8 @@ export default async function LocalizedProductsPage({
 
   const locale = lang as Locale;
   const query = await searchParams;
-  const primary = Array.isArray(query.primary) ? query.primary[0] : query.primary;
-  const initialPrimaryCategory: ProductPrimaryCategoryKey | null = isPrimaryCategoryKey(primary) ? primary : null;
+  const category = Array.isArray(query.category) ? query.category[0] : query.category;
+  const initialCategory: ProductCategoryKey | null = isProductCategoryKey(category) ? category : null;
 
   const config = await getSiteConfig();
   const dictionary = await getResolvedDictionary(locale, config);
@@ -52,7 +52,7 @@ export default async function LocalizedProductsPage({
           initialProducts={products}
           locale={locale}
           dictionary={dictionary}
-          initialPrimaryCategory={initialPrimaryCategory}
+          initialCategory={initialCategory}
         />
       </div>
 

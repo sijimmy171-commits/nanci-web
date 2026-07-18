@@ -11,15 +11,11 @@ type ProductFormInitial = {
   id: string;
   name: string;
   model: string;
-  description: string | null;
   specs: string | null;
   imageUrl: string | null;
-  primaryCategory: string | null;
-  secondaryCategory: string | null;
-  tertiaryCategory: string | null;
+  productCategory: string | null;
   translations: {
     name: { en: string };
-    description: { en: string };
     specs: { en: string };
   };
 };
@@ -150,19 +146,12 @@ export default function ProductForm({ mode, action, initial, translationReady }:
               </div>
 
               <ProductCategoryFields
-                initialPrimaryCategory={initial?.primaryCategory}
-                initialSecondaryCategory={initial?.secondaryCategory}
-                initialTertiaryCategory={initial?.tertiaryCategory}
+                initialProductCategory={initial?.productCategory}
               />
 
               <div className="space-y-2">
-                <FieldLabel>中文规格</FieldLabel>
-                <textarea name="specs" rows={4} defaultValue={initial?.specs ?? ''} placeholder="35kV, 10kN, 硅橡胶" className="w-full bg-bmw-lightgray border border-gray-200 p-4 text-sm focus:outline-none focus:border-bmw-blue transition-all resize-none" />
-              </div>
-
-              <div className="space-y-2">
-                <FieldLabel>中文详细描述 *</FieldLabel>
-                <textarea required name="description" rows={8} defaultValue={initial?.description ?? ''} placeholder="请输入产品的技术参数、应用场景及补充说明..." className="w-full bg-bmw-lightgray border border-gray-200 p-4 text-sm focus:outline-none focus:border-bmw-blue transition-all resize-none" />
+                <FieldLabel>中文简要规格 *</FieldLabel>
+                <textarea required name="specs" rows={3} defaultValue={initial?.specs ?? ''} placeholder="例如：35kV / 10kN / 硅橡胶" className="w-full bg-bmw-lightgray border border-gray-200 p-4 text-sm focus:outline-none focus:border-bmw-blue transition-all resize-none" />
               </div>
             </div>
 
@@ -178,13 +167,8 @@ export default function ProductForm({ mode, action, initial, translationReady }:
               </div>
 
               <div className="space-y-2">
-                <FieldLabel>英文规格</FieldLabel>
-                <textarea name="specsEn" rows={4} defaultValue={initial?.translations.specs.en ?? ''} placeholder="35kV, 10kN, silicone rubber" className="w-full bg-bmw-lightgray border border-gray-200 p-4 text-sm focus:outline-none focus:border-bmw-blue transition-all resize-none" />
-              </div>
-
-              <div className="space-y-2">
-                <FieldLabel>英文详细描述</FieldLabel>
-                <textarea name="descriptionEn" rows={8} defaultValue={initial?.translations.description.en ?? ''} placeholder="Summarize the application, structure, and key value of this product in English..." className="w-full bg-bmw-lightgray border border-gray-200 p-4 text-sm focus:outline-none focus:border-bmw-blue transition-all resize-none" />
+                <FieldLabel>英文简要规格</FieldLabel>
+                <textarea name="specsEn" rows={3} defaultValue={initial?.translations.specs.en ?? ''} placeholder="e.g. 35kV / 10kN / silicone rubber" className="w-full bg-bmw-lightgray border border-gray-200 p-4 text-sm focus:outline-none focus:border-bmw-blue transition-all resize-none" />
               </div>
             </div>
           </div>
@@ -193,7 +177,7 @@ export default function ProductForm({ mode, action, initial, translationReady }:
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-3">
                 <FieldLabel>产品主图上传</FieldLabel>
-                <input type="file" name="imageFile" accept=".jpg,.jpeg,.png,.webp,image/png,image/jpeg,image/webp" className="w-full bg-white border border-gray-200 p-4 text-sm focus:outline-none focus:border-bmw-blue transition-all file:mr-4 file:border-0 file:bg-bmw-black file:px-4 file:py-2 file:text-xs file:font-bold file:uppercase file:tracking-widest file:text-white" />
+                <input required={mode === 'create'} type="file" name="imageFile" accept=".jpg,.jpeg,.png,.webp,image/png,image/jpeg,image/webp" className="w-full bg-white border border-gray-200 p-4 text-sm focus:outline-none focus:border-bmw-blue transition-all file:mr-4 file:border-0 file:bg-bmw-black file:px-4 file:py-2 file:text-xs file:font-bold file:uppercase file:tracking-widest file:text-white" />
                 {initial?.imageUrl && (
                   <div className="border border-gray-200 bg-white p-3 w-48 h-48">
                     {/* eslint-disable-next-line @next/next/no-img-element */}

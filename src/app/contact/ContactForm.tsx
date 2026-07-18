@@ -5,27 +5,28 @@ import { Loader2, ArrowRight } from 'lucide-react';
 import { createInquiry } from './actions';
 import type { Locale } from '@/lib/i18n';
 import type { SiteDictionary } from '@/lib/site-content';
-import { getPrimaryCategories } from '@/lib/product-taxonomy';
+import { getProductCategories } from '@/lib/product-taxonomy';
 
 export default function ContactForm({ locale, dictionary }: { locale: Locale; dictionary: SiteDictionary }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState('');
   const formCopy = dictionary.contact.form;
-  const primaryCategories = getPrimaryCategories(locale);
+  const productCategories = getProductCategories(locale);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    const form = e.currentTarget;
     setIsSubmitting(true);
     setError('');
 
-    const formData = new FormData(e.currentTarget);
+    const formData = new FormData(form);
     formData.set('locale', locale);
     const result = await createInquiry(formData);
 
     if (result.success) {
       setIsSuccess(true);
-      e.currentTarget.reset();
+      form.reset();
     } else {
       setError(result.error || formCopy.errorFallback);
     }
@@ -79,7 +80,7 @@ export default function ContactForm({ locale, dictionary }: { locale: Locale; di
           <label className="block text-[10px] uppercase font-bold tracking-widest text-gray-400 mb-2 group-focus-within:text-bmw-blue transition-colors">{formCopy.product}</label>
           <select name="productType" className="w-full bg-bmw-lightgray border border-gray-200 p-4 text-sm text-bmw-black focus:outline-none focus:border-bmw-blue transition-colors appearance-none">
             <option value="Not Specified">{formCopy.selectPlaceholder}</option>
-            {primaryCategories.map((category) => (
+            {productCategories.map((category) => (
               <option key={category.key} value={category.label}>
                 {category.label}
               </option>

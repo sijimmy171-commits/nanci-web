@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation';
 import { ChevronDown, Globe, Menu, X } from 'lucide-react';
 import { getLocalizedPath, localeLabels, publishedLocales, removeLocaleFromPath, type Locale } from '@/lib/i18n';
 import type { SiteDictionary } from '@/lib/site-content';
-import { getPrimaryCategories } from '@/lib/product-taxonomy';
+import { getProductCategories } from '@/lib/product-taxonomy';
 
 function getBasePath(path: string) {
   return path.split(/[?#]/)[0] || '/';
@@ -27,13 +27,13 @@ export default function Header({ locale, dictionary }: { locale: Locale; diction
   const isTransparentWithWhiteText = !isScrolled;
   const currentPath = removeLocaleFromPath(pathname || '/');
   const productMenuItems = [
-    ...getPrimaryCategories(locale).map((category) => ({
-      id: `/products?primary=${category.key}`,
+    ...getProductCategories(locale).map((category) => ({
+      id: `/products?category=${category.key}`,
       label: category.label,
     })),
     {
       id: '/products#documents',
-      label: locale === 'zh' ? '产品资料下载' : 'Product Documents',
+      label: locale === 'zh' ? '产品资料下载' : 'Product Document Downloads',
     },
   ];
 

@@ -1,5 +1,4 @@
 import { publishedLocales } from '@/lib/i18n';
-import { listProducts } from '@/lib/product-content';
 import { listEditorialRecords } from '@/lib/editorial';
 
 const BASE_URL = process.env.SITE_URL || 'https://insulatorschina.com';
@@ -33,23 +32,6 @@ export async function GET() {
     entries.push({ loc: `${BASE_URL}/${locale}/products`, lastmod: now, changefreq: 'weekly', priority: 0.9 });
     entries.push({ loc: `${BASE_URL}/${locale}/news`, lastmod: now, changefreq: 'weekly', priority: 0.7 });
     entries.push({ loc: `${BASE_URL}/${locale}/contact`, lastmod: now, changefreq: 'monthly', priority: 0.6 });
-  }
-
-  // Dynamic product pages
-  try {
-    const products = await listProducts();
-    for (const product of products) {
-      for (const locale of publishedLocales) {
-        entries.push({
-          loc: `${BASE_URL}/${locale}/products/${product.id}`,
-          lastmod: product.updatedAt.toISOString().split('T')[0],
-          changefreq: 'monthly',
-          priority: 0.7,
-        });
-      }
-    }
-  } catch (error) {
-    console.error('Sitemap: failed to load products', error);
   }
 
   // Dynamic news pages

@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer';
+import { resolveMailConfig, sanitizeMailHeader } from '@/lib/mail-config';
 
 function escapeHtml(text: string): string {
   return text
@@ -10,27 +11,30 @@ function escapeHtml(text: string): string {
 }
 
 let cachedTransporter: ReturnType<typeof nodemailer.createTransport> | null = null;
+let cachedConfigKey: string | null = null;
 
 function getTransporter() {
-  if (cachedTransporter) return cachedTransporter;
-
-  const host = process.env.SMTP_HOST;
-  const port = Number(process.env.SMTP_PORT);
-  const user = process.env.SMTP_USER;
-  const pass = process.env.SMTP_PASS;
-
-  if (!host || !user || !pass) {
-    return null;
+  const resolved = resolveMailConfig(process.env);
+  if (!resolved.configured) {
+    return resolved;
   }
 
-  cachedTransporter = nodemailer.createTransport({
-    host,
-    port,
-    secure: false,
-    auth: { user, pass },
-  });
+  const { config } = resolved;
+  const configKey = `${config.host}:${config.port}:${config.user}:${config.recipient}`;
+  if (!cachedTransporter || cachedConfigKey !== configKey) {
+    cachedTransporter = nodemailer.createTransport({
+      host: config.host,
+      port: config.port,
+      secure: config.secure,
+      auth: { user: config.user, pass: config.pass },
+      connectionTimeout: 10_000,
+      greetingTimeout: 10_000,
+      socketTimeout: 20_000,
+    });
+    cachedConfigKey = configKey;
+  }
 
-  return cachedTransporter;
+  return { configured: true as const, config, transporter: cachedTransporter };
 }
 
 export async function sendInquiryNotification(data: {
@@ -41,11 +45,11 @@ export async function sendInquiryNotification(data: {
   product: string;
   message: string;
 }) {
-  const transporter = getTransporter();
+  const mail = getTransporter();
 
-  if (!transporter) {
-    console.warn('SMTP is not configured. Skipping inquiry email notification.');
-    return { success: false, error: 'SMTP not configured' };
+  if (!mail.configured) {
+    console.warn(mail.error);
+    return { success: false as const, error: mail.error };
   }
 
   const safeName = escapeHtml(data.name);
@@ -56,9 +60,10 @@ export async function sendInquiryNotification(data: {
   const safeMessage = escapeHtml(data.message);
 
   const mailOptions = {
-    from: `"SUCI Website" <${process.env.SMTP_USER}>`,
-    to: process.env.ADMIN_RECEIVE_EMAIL,
-    subject: `新询盘通知：来自 ${safeName} (${safeCompany})`,
+    from: `"SUCI Website" <${mail.config.user}>`,
+    to: mail.config.recipient,
+    replyTo: sanitizeMailHeader(data.email),
+    subject: sanitizeMailHeader(`新询盘通知：来自 ${data.name} (${data.company || '未填写'})`),
     html: `
       <div style="font-family: sans-serif; max-width: 600px; margin: auto; border: 1px solid #eee; padding: 20px;">
         <h2 style="color: #0066b1; border-bottom: 2px solid #0066b1; padding-bottom: 10px;">新询盘提醒 (New Inquiry)</h2>
@@ -79,10 +84,13 @@ export async function sendInquiryNotification(data: {
   };
 
   try {
-    await transporter.sendMail(mailOptions);
-    return { success: true };
+    await mail.transporter.sendMail(mailOptions);
+    return { success: true as const };
   } catch (error) {
     console.error('Mail Send Error:', error);
-    return { success: false, error };
+    return {
+      success: false as const,
+      error: error instanceof Error ? error.message : 'Unknown SMTP delivery error',
+    };
   }
 }

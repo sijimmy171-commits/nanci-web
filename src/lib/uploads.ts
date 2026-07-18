@@ -1,8 +1,9 @@
 import 'server-only';
 
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, unlink, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
+import { resolveOwnedUpload } from '@/lib/upload-ownership';
 
 type SaveUploadedFileOptions = {
   file: File | null;
@@ -205,4 +206,45 @@ export async function saveUploadedFile({
   }
 
   return saveToLocalUploads(file, safeFolder, filename);
+}
+
+export async function deleteUploadedFile(fileUrl: string | null | undefined) {
+  if (!fileUrl) return false;
+
+  const storage = getStorageConfig();
+  const owned = resolveOwnedUpload(fileUrl, storage);
+  if (!owned) return false;
+
+  if (owned.kind === 'local') {
+    const uploadsRoot = path.resolve(process.cwd(), 'public', 'uploads');
+    const absolutePath = path.resolve(uploadsRoot, ...owned.relativePath.split('/'));
+    if (!absolutePath.startsWith(`${uploadsRoot}${path.sep}`)) return false;
+
+    try {
+      await unlink(absolutePath);
+    } catch (error) {
+      if (!(error instanceof Error && 'code' in error && error.code === 'ENOENT')) {
+        throw error;
+      }
+    }
+    return true;
+  }
+
+  if (!storage) return false;
+  const encodedPath = encodeObjectPath(owned.objectPath);
+  const deleteUrl = `${storage.supabaseUrl}/storage/v1/object/${encodeURIComponent(storage.bucket)}/${encodedPath}`;
+  const response = await fetch(deleteUrl, {
+    method: 'DELETE',
+    headers: {
+      apikey: storage.serviceRoleKey,
+      Authorization: `Bearer ${storage.serviceRoleKey}`,
+    },
+  });
+
+  if (!response.ok && response.status !== 404) {
+    const details = await response.text().catch(() => '');
+    throw new Error(`Supabase Storage deletion failed (${response.status}): ${details || response.statusText}`);
+  }
+
+  return true;
 }
